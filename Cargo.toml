@@ -1,0 +1,21 @@
+[package]
+name = "prep"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+authors = ["Arc"]
+license = "MIT OR Apache-2.0"
+description = "Text preprocessing primitives: normalization, tokenization, and fast keyword matching."
+
+[dependencies]
+unicode-normalization = "0.1"
+unicode-segmentation = "1.10"
+aho-corasick = "1.1"
+serde = { workspace = true, optional = true }
+
+[features]
+default = []
+serde = ["dep:serde"]
+
+[dev-dependencies]
+proptest = { workspace = true }
