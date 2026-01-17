@@ -120,23 +120,25 @@ mod tests {
         #[test]
         fn prop_remove_zero_width_removes_all_targets(s in ".*") {
             let out = remove_zero_width(&s);
-            prop_assert!(!out.contains('\u{200B}'));
-            prop_assert!(!out.contains('\u{200C}'));
-            prop_assert!(!out.contains('\u{200D}'));
-            prop_assert!(!out.contains('\u{2060}'));
-            prop_assert!(!out.contains('\u{FEFF}'));
+            // Provide explicit messages: proptest's default message uses `stringify!(...)`
+            // which includes `\u{...}` and can be interpreted as formatting braces.
+            prop_assert!(!out.contains('\u{200B}'), "ZWSP (U+200B) not removed");
+            prop_assert!(!out.contains('\u{200C}'), "ZWNJ (U+200C) not removed");
+            prop_assert!(!out.contains('\u{200D}'), "ZWJ (U+200D) not removed");
+            prop_assert!(!out.contains('\u{2060}'), "WORD JOINER (U+2060) not removed");
+            prop_assert!(!out.contains('\u{FEFF}'), "BOM (U+FEFF) not removed");
         }
 
         #[test]
         fn prop_collapse_whitespace_has_no_runs(s in ".*") {
             let out = collapse_whitespace(&s);
             // By construction, output has no leading/trailing whitespace and no internal whitespace runs.
-            prop_assert!(!out.starts_with(char::is_whitespace));
-            prop_assert!(!out.ends_with(char::is_whitespace));
-            prop_assert!(!out.contains("  "));
-            prop_assert!(!out.contains('\n'));
-            prop_assert!(!out.contains('\t'));
-            prop_assert!(!out.contains('\r'));
+            prop_assert!(!out.starts_with(char::is_whitespace), "leading whitespace present");
+            prop_assert!(!out.ends_with(char::is_whitespace), "trailing whitespace present");
+            prop_assert!(!out.contains("  "), "double-space present");
+            prop_assert!(!out.contains('\n'), "newline present");
+            prop_assert!(!out.contains('\t'), "tab present");
+            prop_assert!(!out.contains('\r'), "CR present");
         }
     }
 }

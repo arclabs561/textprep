@@ -37,11 +37,16 @@ pub fn tokenize_with_offsets(text: &str) -> Vec<Token> {
 
         let start = last_char;
         let len = word.chars().count();
-        tokens.push(Token {
-            text: word.to_string(),
-            start,
-            end: start + len,
-        });
+        // Defensive: `unicode_word_indices()` should not return whitespace-containing tokens,
+        // but some inputs (control chars / edge cases) can produce surprising results.
+        // We only keep tokens that contain at least one non-whitespace char and no whitespace.
+        if !word.is_empty() && word.chars().all(|c| !c.is_whitespace()) {
+            tokens.push(Token {
+                text: word.to_string(),
+                start,
+                end: start + len,
+            });
+        }
 
         last_byte = byte_idx + word.len();
         last_char = start + len;
