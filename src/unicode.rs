@@ -47,6 +47,10 @@ pub fn normalize_newlines(text: &str) -> String {
 /// - U+200D ZERO WIDTH JOINER
 /// - U+2060 WORD JOINER
 /// - U+FEFF ZERO WIDTH NO-BREAK SPACE (BOM)
+///
+/// Warning: some of these characters are semantically meaningful in certain scripts
+/// (e.g. ZWNJ/ZWJ) or sequences (emoji ZWJ). Treat this as a normalization step for
+/// matching/search, not as a general-purpose text rewriting.
 pub fn remove_zero_width(text: &str) -> String {
     text.chars()
         .filter(|&c| {
@@ -56,6 +60,57 @@ pub fn remove_zero_width(text: &str) -> String {
             )
         })
         .collect()
+}
+
+/// Remove Unicode bidirectional control characters.
+///
+/// This targets the classes of control characters used in "Trojan Source"-style
+/// display obfuscation attacks (plus the common LRM/RLM marks):
+/// - U+202A..U+202E (embeddings + overrides)
+/// - U+2066..U+2069 (isolates)
+/// - U+200E, U+200F (LRM/RLM)
+///
+/// This is a *policy* tool: for some natural-language text you may want to keep these.
+pub fn remove_bidi_controls(text: &str) -> String {
+    text.chars()
+        .filter(|&c| {
+            !matches!(
+                c,
+                '\u{202A}'
+                    | '\u{202B}'
+                    | '\u{202C}'
+                    | '\u{202D}'
+                    | '\u{202E}'
+                    | '\u{2066}'
+                    | '\u{2067}'
+                    | '\u{2068}'
+                    | '\u{2069}'
+                    | '\u{200E}'
+                    | '\u{200F}'
+            )
+        })
+        .collect()
+}
+
+/// Check whether text contains bidi control characters.
+#[must_use]
+pub fn contains_bidi_controls(text: &str) -> bool {
+    text.chars().any(|c| {
+        matches!(
+            c,
+            '\u{202A}'
+                | '\u{202B}'
+                | '\u{202C}'
+                | '\u{202D}'
+                | '\u{202E}'
+                | '\u{2066}'
+                | '\u{2067}'
+                | '\u{2068}'
+                | '\u{2069}'
+                | '\u{200E}'
+                | '\u{200F}'
+        )
+    })
 }
 
 /// Collapse all Unicode whitespace into single ASCII spaces.
@@ -107,6 +162,15 @@ mod tests {
     fn test_remove_zero_width() {
         let text = "a\u{200b}b\u{200c}c\u{200d}d\u{2060}e\u{feff}f";
         assert_eq!(remove_zero_width(text), "abcdef");
+    }
+
+    #[test]
+    fn test_remove_bidi_controls() {
+        // Mix embeddings/overrides + isolates + marks.
+        let text = "a\u{202e}\u{2066}b\u{2069}\u{202c}\u{200f}c";
+        assert!(contains_bidi_controls(text));
+        assert_eq!(remove_bidi_controls(text), "abc");
+        assert!(!contains_bidi_controls(&remove_bidi_controls(text)));
     }
 
     #[test]
