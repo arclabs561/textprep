@@ -1,6 +1,6 @@
-//! # prep
+//! # textprep
 //!
-//! Text preprocessing primitives for Tekne.
+//! Text preprocessing primitives for the representational stack.
 //!
 //! Provides Unicode normalization, case folding, diacritics stripping,
 //! tokenization, and fast keyword matching.
