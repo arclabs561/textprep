@@ -8,12 +8,15 @@
 pub mod flash;
 pub mod fold;
 pub mod ngram;
+pub mod similarity;
 pub mod stopwords;
+pub mod subword;
 pub mod tokenize;
 pub mod unicode;
 
 pub use flash::{FlashText, KeywordMatch};
 pub use fold::{fold, strip_diacritics};
+pub use subword::{BpeTokenizer, SubwordTokenizer};
 pub use tokenize::Token;
 pub use unicode::{nfc, nfkc};
 

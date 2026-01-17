@@ -1,0 +1,6 @@
+target/
+.DS_Store
+
+# Fuzzing artifacts (cargo-fuzz)
+fuzz/target/
+fuzz/Cargo.lock

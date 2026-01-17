@@ -11,11 +11,18 @@ description = "Text preprocessing primitives: normalization, tokenization, and f
 unicode-normalization = "0.1"
 unicode-segmentation = "1.10"
 aho-corasick = "1.1"
+unicode-casefold = { version = "0.2", optional = true }
 serde = { workspace = true, optional = true }
 
 [features]
 default = []
 serde = ["dep:serde"]
+casefold = ["dep:unicode-casefold"]
 
 [dev-dependencies]
 proptest = { workspace = true }
+criterion = { workspace = true }
+
+[[bench]]
+name = "textprep_bench"
+harness = false

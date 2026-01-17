@@ -1,0 +1,33 @@
+[package]
+name = "textprep-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+textprep = { path = ".." }
+
+[[bin]]
+name = "collapse_whitespace"
+path = "fuzz_targets/collapse_whitespace.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "tokenize_with_offsets"
+path = "fuzz_targets/tokenize_with_offsets.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "similarity"
+path = "fuzz_targets/similarity.rs"
+test = false
+doc = false
+
+[workspace]
+
