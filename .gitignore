@@ -4,3 +4,6 @@ target/
 # Fuzzing artifacts (cargo-fuzz)
 fuzz/target/
 fuzz/Cargo.lock
+
+# proptest failure persistence
+*.proptest-regressions
