@@ -6,13 +6,16 @@ rust-version = "1.75"
 authors = ["Arc"]
 license = "MIT OR Apache-2.0"
 description = "Text preprocessing primitives: normalization, tokenization, and fast keyword matching."
+repository = "https://github.com/arclabs561/textprep"
+homepage = "https://github.com/arclabs561/textprep"
+documentation = "https://docs.rs/textprep"
 
 [dependencies]
 unicode-normalization = "0.1"
 unicode-segmentation = "1.10"
 aho-corasick = "1.1"
 unicode-casefold = { version = "0.2", optional = true }
-serde = { workspace = true, optional = true }
+serde = { version = "1.0", features = ["derive"], optional = true }
 
 [features]
 default = []
