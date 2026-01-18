@@ -25,6 +25,7 @@ casefold = ["dep:unicode-casefold"]
 [dev-dependencies]
 proptest = { workspace = true }
 criterion = { workspace = true }
+serde_json = { workspace = true }
 
 [[bench]]
 name = "textprep_bench"
