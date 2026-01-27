@@ -29,5 +29,23 @@ path = "fuzz_targets/similarity.rs"
 test = false
 doc = false
 
+[[bin]]
+name = "unicode_invisibles"
+path = "fuzz_targets/unicode_invisibles.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "scrub_policies"
+path = "fuzz_targets/scrub_policies.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "flashtext_find"
+path = "fuzz_targets/flashtext_find.rs"
+test = false
+doc = false
+
 [workspace]
 

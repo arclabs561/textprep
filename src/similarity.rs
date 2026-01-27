@@ -116,7 +116,7 @@ mod tests {
         let s = "François Müller";
         assert!((char_ngram_jaccard(s, s, 3) - 1.0).abs() < 1e-9);
         let v = char_ngram_jaccard("hello", "world", 3);
-        assert!(v >= 0.0 && v <= 1.0);
+        assert!((0.0..=1.0).contains(&v));
     }
 
     #[test]
@@ -127,4 +127,3 @@ mod tests {
         assert_eq!(trigram_jaccard("a", "b"), 0.0);
     }
 }
-

@@ -18,6 +18,8 @@ pub trait SubwordTokenizer: Send + Sync {
 /// A simple vocabulary lookup tokenizer.
 ///
 /// Note: this is not true BPE. It is a thin adapter for toy projections/tests.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BpeTokenizer {
     vocab: HashMap<String, u32>,
 }
@@ -36,4 +38,3 @@ impl SubwordTokenizer for BpeTokenizer {
             .collect()
     }
 }
-

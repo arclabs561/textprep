@@ -3,9 +3,7 @@
 use unicode_normalization::UnicodeNormalization;
 
 pub fn strip_diacritics(text: &str) -> String {
-    text.nfd()
-        .filter(|c| !is_combining_mark(*c))
-        .collect()
+    text.nfd().filter(|c| !is_combining_mark(*c)).collect()
 }
 
 fn is_combining_mark(c: char) -> bool {

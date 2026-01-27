@@ -39,6 +39,44 @@ pub fn normalize_newlines(text: &str) -> String {
     out
 }
 
+/// Like [`normalize_newlines`], but writes into an existing `String`.
+pub fn normalize_newlines_into(text: &str, out: &mut String) {
+    out.clear();
+    out.reserve(text.len());
+    let mut chars = text.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '\r' {
+            if chars.peek() == Some(&'\n') {
+                let _ = chars.next();
+            }
+            out.push('\n');
+        } else {
+            out.push(c);
+        }
+    }
+}
+
+/// Trim each line (preserving internal spacing) and drop blank lines.
+///
+/// This is a “document cleaning” primitive:
+/// - preserves case
+/// - preserves internal whitespace runs (e.g. `"Hello   World"`)
+/// - normalizes newlines to `\n`
+/// - trims leading/trailing whitespace per line
+/// - removes empty lines
+///
+/// If you want a *search key* (casefold + diacritics stripping + whitespace collapse),
+/// use `crate::scrub_with` and an explicit `ScrubConfig`.
+pub fn trim_lines_preserve_spaces(text: &str) -> String {
+    let normalized = normalize_newlines(text);
+    normalized
+        .lines()
+        .map(|l| l.trim())
+        .filter(|l| !l.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 /// Remove common zero-width characters that often cause "ghost mismatches".
 ///
 /// This is intentionally conservative and targets the usual culprits:
@@ -62,6 +100,50 @@ pub fn remove_zero_width(text: &str) -> String {
         .collect()
 }
 
+/// Like [`remove_zero_width`], but writes into an existing `String`.
+pub fn remove_zero_width_into(text: &str, out: &mut String) {
+    out.clear();
+    out.reserve(text.len());
+    out.extend(text.chars().filter(|&c| {
+        !matches!(
+            c,
+            '\u{200B}' | '\u{200C}' | '\u{200D}' | '\u{2060}' | '\u{FEFF}'
+        )
+    }));
+}
+
+/// Check whether text contains any of the "common zero-width" characters targeted by
+/// [`remove_zero_width`].
+#[must_use]
+pub fn contains_zero_width(text: &str) -> bool {
+    text.chars().any(|c| {
+        matches!(
+            c,
+            '\u{200B}' | '\u{200C}' | '\u{200D}' | '\u{2060}' | '\u{FEFF}'
+        )
+    })
+}
+
+/// Return all "common zero-width" characters found, with **character offsets**.
+///
+/// This is the detection/reporting counterpart to [`remove_zero_width`].
+#[must_use]
+pub fn zero_width_with_offsets(text: &str) -> Vec<(usize, char)> {
+    text.chars()
+        .enumerate()
+        .filter_map(|(i, c)| {
+            if matches!(
+                c,
+                '\u{200B}' | '\u{200C}' | '\u{200D}' | '\u{2060}' | '\u{FEFF}'
+            ) {
+                Some((i, c))
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
 /// Remove Unicode bidirectional control characters.
 ///
 /// This targets the classes of control characters used in "Trojan Source"-style
@@ -69,6 +151,7 @@ pub fn remove_zero_width(text: &str) -> String {
 /// - U+202A..U+202E (embeddings + overrides)
 /// - U+2066..U+2069 (isolates)
 /// - U+200E, U+200F (LRM/RLM)
+/// - U+061C (ARABIC LETTER MARK, ALM)
 ///
 /// This is a *policy* tool: for some natural-language text you may want to keep these.
 pub fn remove_bidi_controls(text: &str) -> String {
@@ -87,9 +170,33 @@ pub fn remove_bidi_controls(text: &str) -> String {
                     | '\u{2069}'
                     | '\u{200E}'
                     | '\u{200F}'
+                    | '\u{061C}'
             )
         })
         .collect()
+}
+
+/// Like [`remove_bidi_controls`], but writes into an existing `String`.
+pub fn remove_bidi_controls_into(text: &str, out: &mut String) {
+    out.clear();
+    out.reserve(text.len());
+    out.extend(text.chars().filter(|&c| {
+        !matches!(
+            c,
+            '\u{202A}'
+                | '\u{202B}'
+                | '\u{202C}'
+                | '\u{202D}'
+                | '\u{202E}'
+                | '\u{2066}'
+                | '\u{2067}'
+                | '\u{2068}'
+                | '\u{2069}'
+                | '\u{200E}'
+                | '\u{200F}'
+                | '\u{061C}'
+        )
+    }));
 }
 
 /// Check whether text contains bidi control characters.
@@ -109,8 +216,44 @@ pub fn contains_bidi_controls(text: &str) -> bool {
                 | '\u{2069}'
                 | '\u{200E}'
                 | '\u{200F}'
+                | '\u{061C}'
         )
     })
+}
+
+/// Return all bidi control characters found, with **character offsets**.
+///
+/// This is useful when you want to *detect and report* (like `rustc`'s
+/// `text_direction_codepoint_in_comment` / `text_direction_codepoint_in_literal` lints)
+/// instead of silently stripping.
+///
+/// Offsets are in **characters**, not bytes.
+#[must_use]
+pub fn bidi_controls_with_offsets(text: &str) -> Vec<(usize, char)> {
+    text.chars()
+        .enumerate()
+        .filter_map(|(i, c)| {
+            if matches!(
+                c,
+                '\u{202A}'
+                    | '\u{202B}'
+                    | '\u{202C}'
+                    | '\u{202D}'
+                    | '\u{202E}'
+                    | '\u{2066}'
+                    | '\u{2067}'
+                    | '\u{2068}'
+                    | '\u{2069}'
+                    | '\u{200E}'
+                    | '\u{200F}'
+                    | '\u{061C}'
+            ) {
+                Some((i, c))
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 /// Collapse all Unicode whitespace into single ASCII spaces.
@@ -137,6 +280,25 @@ pub fn collapse_whitespace(text: &str) -> String {
     out
 }
 
+/// Like [`collapse_whitespace`], but writes into an existing `String`.
+pub fn collapse_whitespace_into(text: &str, out: &mut String) {
+    out.clear();
+    out.reserve(text.len());
+
+    let mut in_ws = true; // treat start as whitespace to avoid leading space
+    for c in text.chars() {
+        if c.is_whitespace() {
+            in_ws = true;
+            continue;
+        }
+        if in_ws && !out.is_empty() {
+            out.push(' ');
+        }
+        in_ws = false;
+        out.push(c);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -159,9 +321,42 @@ mod tests {
     }
 
     #[test]
+    fn test_normalize_newlines_into_matches() {
+        let text = "Line 1\r\nLine 2\rLine 3\nLine 4";
+        let expected = normalize_newlines(text);
+        let mut out = String::new();
+        normalize_newlines_into(text, &mut out);
+        assert_eq!(out, expected);
+    }
+
+    #[test]
+    fn test_trim_lines_preserve_spaces() {
+        // Mixed scripts + diacritics + extra whitespace.
+        let text = "  Hello   World  \r\n\r\n  東京  \n\n  Müller  ";
+        let out = trim_lines_preserve_spaces(text);
+        assert_eq!(out, "Hello   World\n東京\nMüller");
+    }
+
+    #[test]
     fn test_remove_zero_width() {
         let text = "a\u{200b}b\u{200c}c\u{200d}d\u{2060}e\u{feff}f";
+        assert!(contains_zero_width(text));
+        assert_eq!(
+            zero_width_with_offsets(text),
+            vec![
+                (1, '\u{200B}'),
+                (3, '\u{200C}'),
+                (5, '\u{200D}'),
+                (7, '\u{2060}'),
+                (9, '\u{FEFF}')
+            ]
+        );
         assert_eq!(remove_zero_width(text), "abcdef");
+        assert!(!contains_zero_width(&remove_zero_width(text)));
+
+        let mut out = String::new();
+        remove_zero_width_into(text, &mut out);
+        assert_eq!(out, "abcdef");
     }
 
     #[test]
@@ -169,8 +364,30 @@ mod tests {
         // Mix embeddings/overrides + isolates + marks.
         let text = "a\u{202e}\u{2066}b\u{2069}\u{202c}\u{200f}c";
         assert!(contains_bidi_controls(text));
+        assert_eq!(
+            bidi_controls_with_offsets(text),
+            vec![
+                (1, '\u{202E}'),
+                (2, '\u{2066}'),
+                (4, '\u{2069}'),
+                (5, '\u{202C}'),
+                (6, '\u{200F}')
+            ]
+        );
         assert_eq!(remove_bidi_controls(text), "abc");
         assert!(!contains_bidi_controls(&remove_bidi_controls(text)));
+
+        let mut out = String::new();
+        remove_bidi_controls_into(text, &mut out);
+        assert_eq!(out, "abc");
+    }
+
+    #[test]
+    fn test_remove_bidi_controls_includes_alm() {
+        let text = "a\u{061c}b";
+        assert!(contains_bidi_controls(text));
+        assert_eq!(bidi_controls_with_offsets(text), vec![(1, '\u{061C}')]);
+        assert_eq!(remove_bidi_controls(text), "ab");
     }
 
     #[test]
@@ -178,6 +395,15 @@ mod tests {
         let text = "  hello\tworld \n  東京  \r\n  Müller  ";
         let collapsed = collapse_whitespace(text);
         assert_eq!(collapsed, "hello world 東京 Müller");
+    }
+
+    #[test]
+    fn test_collapse_whitespace_into_matches() {
+        let text = "  hello\tworld \n  東京  \r\n  Müller  ";
+        let expected = collapse_whitespace(text);
+        let mut out = String::new();
+        collapse_whitespace_into(text, &mut out);
+        assert_eq!(out, expected);
     }
 
     proptest! {
@@ -203,6 +429,22 @@ mod tests {
             prop_assert!(!out.contains('\n'), "newline present");
             prop_assert!(!out.contains('\t'), "tab present");
             prop_assert!(!out.contains('\r'), "CR present");
+        }
+
+        #[test]
+        fn prop_normalize_newlines_into_equivalent(s in ".*") {
+            let expected = normalize_newlines(&s);
+            let mut out = String::new();
+            normalize_newlines_into(&s, &mut out);
+            prop_assert_eq!(out, expected);
+        }
+
+        #[test]
+        fn prop_collapse_whitespace_into_equivalent(s in ".*") {
+            let expected = collapse_whitespace(&s);
+            let mut out = String::new();
+            collapse_whitespace_into(&s, &mut out);
+            prop_assert_eq!(out, expected);
         }
     }
 }

@@ -6,6 +6,19 @@ const ZWJ: char = '\u{200D}'; // ZERO WIDTH JOINER
 const WJ: char = '\u{2060}'; // WORD JOINER
 const BOM: char = '\u{FEFF}'; // ZERO WIDTH NO-BREAK SPACE (BOM)
 
+const LRE: char = '\u{202A}'; // LEFT-TO-RIGHT EMBEDDING
+const RLE: char = '\u{202B}'; // RIGHT-TO-LEFT EMBEDDING
+const PDF: char = '\u{202C}'; // POP DIRECTIONAL FORMATTING
+const LRO: char = '\u{202D}'; // LEFT-TO-RIGHT OVERRIDE
+const RLO: char = '\u{202E}'; // RIGHT-TO-LEFT OVERRIDE
+const LRI: char = '\u{2066}'; // LEFT-TO-RIGHT ISOLATE
+const RLI: char = '\u{2067}'; // RIGHT-TO-LEFT ISOLATE
+const FSI: char = '\u{2068}'; // FIRST-STRONG ISOLATE
+const PDI: char = '\u{2069}'; // POP DIRECTIONAL ISOLATE
+const LRM: char = '\u{200E}'; // LEFT-TO-RIGHT MARK
+const RLM: char = '\u{200F}'; // RIGHT-TO-LEFT MARK
+const ALM: char = '\u{061C}'; // ARABIC LETTER MARK
+
 fn any_reasonable_string() -> impl Strategy<Value = String> {
     // Keep it bounded to avoid slow quadratic behavior in tests.
     // Includes full Unicode scalar range (including control chars).
@@ -13,7 +26,36 @@ fn any_reasonable_string() -> impl Strategy<Value = String> {
 }
 
 fn slice_by_char_range(text: &str, start: usize, end: usize) -> String {
-    text.chars().skip(start).take(end.saturating_sub(start)).collect()
+    text.chars()
+        .skip(start)
+        .take(end.saturating_sub(start))
+        .collect()
+}
+
+fn assert_flash_matches_sane(
+    text: &str,
+    matches: &[textprep::KeywordMatch],
+) -> Result<(), TestCaseError> {
+    let char_count = text.chars().count();
+
+    let mut last_end = 0usize;
+    for m in matches {
+        prop_assert!(m.start <= m.end);
+        prop_assert!(m.end <= char_count);
+        prop_assert!(last_end <= m.start);
+
+        let extracted = slice_by_char_range(text, m.start, m.end);
+        // `FlashText` uses ASCII case-insensitive matching (configurable internally),
+        // so the matched substring may differ in ASCII casing from the pattern.
+        prop_assert_eq!(
+            extracted.to_ascii_lowercase(),
+            m.keyword.to_ascii_lowercase()
+        );
+
+        last_end = m.end;
+    }
+
+    Ok(())
 }
 
 proptest! {
@@ -44,6 +86,42 @@ proptest! {
         prop_assert!(!out1.contains(ZWJ));
         prop_assert!(!out1.contains(WJ));
         prop_assert!(!out1.contains(BOM));
+    }
+
+    #[test]
+    fn zero_width_offsets_roundtrip(s in any_reasonable_string()) {
+        let hits = textprep::unicode::zero_width_with_offsets(&s);
+        prop_assert_eq!(textprep::unicode::contains_zero_width(&s), !hits.is_empty());
+        for (i, c) in &hits {
+            prop_assert_eq!(s.chars().nth(*i), Some(*c));
+            prop_assert!(matches!(*c, ZWSP | ZWNJ | ZWJ | WJ | BOM));
+        }
+
+        let out = textprep::unicode::remove_zero_width(&s);
+        prop_assert!(!textprep::unicode::contains_zero_width(&out));
+        prop_assert!(textprep::unicode::zero_width_with_offsets(&out).is_empty());
+
+        // remove_* is a pure deletion of these codepoints.
+        prop_assert_eq!(out.chars().count() + hits.len(), s.chars().count());
+    }
+
+    #[test]
+    fn bidi_offsets_roundtrip(s in any_reasonable_string()) {
+        let hits = textprep::unicode::bidi_controls_with_offsets(&s);
+        prop_assert_eq!(textprep::unicode::contains_bidi_controls(&s), !hits.is_empty());
+        for (i, c) in &hits {
+            prop_assert_eq!(s.chars().nth(*i), Some(*c));
+            prop_assert!(matches!(
+                *c,
+                LRE | RLE | PDF | LRO | RLO | LRI | RLI | FSI | PDI | LRM | RLM | ALM
+            ));
+        }
+
+        let out = textprep::unicode::remove_bidi_controls(&s);
+        prop_assert!(!textprep::unicode::contains_bidi_controls(&out));
+        prop_assert!(textprep::unicode::bidi_controls_with_offsets(&out).is_empty());
+
+        prop_assert_eq!(out.chars().count() + hits.len(), s.chars().count());
     }
 
     #[test]
@@ -82,12 +160,12 @@ proptest! {
     ) {
         let w1 = textprep::similarity::word_jaccard(&a, &b);
         let w2 = textprep::similarity::word_jaccard(&b, &a);
-        prop_assert!(w1 >= 0.0 && w1 <= 1.0);
+        prop_assert!((0.0..=1.0).contains(&w1));
         prop_assert!((w1 - w2).abs() < 1e-12);
 
         let c1 = textprep::similarity::char_ngram_jaccard(&a, &b, n);
         let c2 = textprep::similarity::char_ngram_jaccard(&b, &a, n);
-        prop_assert!(c1 >= 0.0 && c1 <= 1.0);
+        prop_assert!((0.0..=1.0).contains(&c1));
         prop_assert!((c1 - c2).abs() < 1e-12);
     }
 
@@ -99,7 +177,7 @@ proptest! {
         w in 0.0f64..=1.0f64,
     ) {
         let s = textprep::similarity::weighted_word_char_ngram_jaccard(&a, &b, n, w, 1.0 - w);
-        prop_assert!(s >= 0.0 && s <= 1.0);
+        prop_assert!((0.0..=1.0).contains(&s));
     }
 
     #[test]
@@ -125,5 +203,67 @@ proptest! {
             }
         }
     }
-}
 
+    #[test]
+    fn flashtext_find_is_well_formed_and_matches_find_into(s in any_reasonable_string()) {
+        let mut ft = textprep::FlashText::new();
+        ft.add_keyword("François", "francois");
+        ft.add_keyword("Müller", "muller");
+        ft.add_keyword("北京", "beijing");
+        ft.add_keyword("hello", "hello");
+
+        let matches = ft.find(&s);
+        assert_flash_matches_sane(&s, &matches)?;
+
+        let mut out = Vec::new();
+        ft.find_into(&s, &mut out);
+        // Compare by reference so we can keep using `out` below.
+        prop_assert_eq!(&out, &matches);
+        assert_flash_matches_sane(&s, &out)?;
+    }
+
+    #[test]
+    fn flashtext_finds_embedded_keyword(
+        prefix in any_reasonable_string(),
+        suffix in any_reasonable_string(),
+    ) {
+        // Keep the constructed string modest so tests stay fast.
+        let prefix: String = prefix.chars().take(80).collect();
+        let suffix: String = suffix.chars().take(80).collect();
+
+        let text = format!("{prefix} HeLLo {suffix}");
+
+        let mut ft = textprep::FlashText::new();
+        ft.add_keyword("hello", "hello");
+
+        let matches = ft.find(&text);
+        assert_flash_matches_sane(&text, &matches)?;
+        prop_assert!(matches.iter().any(|m| m.keyword == "hello"));
+    }
+
+    #[test]
+    fn scrub_search_key_is_idempotent(s in any_reasonable_string()) {
+        let cfg = textprep::ScrubConfig::search_key();
+        let out1 = textprep::scrub_with(&s, &cfg);
+        let out2 = textprep::scrub_with(&out1, &cfg);
+        prop_assert_eq!(out1, out2);
+    }
+
+    #[test]
+    fn scrub_search_key_is_trimmed_and_single_spaced(s in any_reasonable_string()) {
+        let cfg = textprep::ScrubConfig::search_key();
+        let out = textprep::scrub_with(&s, &cfg);
+        prop_assert!(!out.starts_with(' '));
+        prop_assert!(!out.ends_with(' '));
+        prop_assert!(!out.contains("  "));
+        prop_assert!(out.chars().all(|c| !c.is_whitespace() || c == ' '));
+    }
+
+    #[test]
+    fn scrub_search_key_strict_is_idempotent(s in any_reasonable_string()) {
+        let cfg = textprep::ScrubConfig::search_key_strict_invisibles();
+        let out1 = textprep::scrub_with(&s, &cfg);
+        let out2 = textprep::scrub_with(&out1, &cfg);
+        prop_assert_eq!(out1, out2);
+    }
+}
