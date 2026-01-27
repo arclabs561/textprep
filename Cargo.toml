@@ -23,9 +23,9 @@ serde = ["dep:serde"]
 casefold = ["dep:unicode-casefold"]
 
 [dev-dependencies]
-proptest = { workspace = true }
-criterion = { workspace = true }
-serde_json = { workspace = true }
+proptest = "1.9"
+criterion = "0.7"
+serde_json = "1.0"
 
 [[bench]]
 name = "textprep_bench"
