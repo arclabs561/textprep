@@ -9,6 +9,9 @@ description = "Text preprocessing primitives: normalization, tokenization, and f
 repository = "https://github.com/arclabs561/textprep"
 homepage = "https://github.com/arclabs561/textprep"
 documentation = "https://docs.rs/textprep"
+readme = "README.md"
+keywords = ["text-processing", "tokenization", "normalization", "aho-corasick"]
+categories = ["text-processing"]
 
 [dependencies]
 unicode-normalization = "0.1"
