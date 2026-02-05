@@ -132,9 +132,36 @@ pub const ENGLISH: &[&str] = &[
     "yourselves",
 ];
 
+/// Fast membership check for English stopwords.
+///
+/// The `ENGLISH` list is kept sorted so we can use `binary_search` without
+/// allocating a `HashSet`.
+pub fn is_english_stopword(token: &str) -> bool {
+    ENGLISH.binary_search(&token).is_ok()
+}
+
 pub fn get(lang: &str) -> HashSet<String> {
     match lang.to_lowercase().as_str() {
         "en" | "english" => ENGLISH.iter().map(|s| s.to_string()).collect(),
         _ => HashSet::new(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn english_stopwords_are_sorted_for_binary_search() {
+        assert!(
+            ENGLISH.windows(2).all(|w| w[0] <= w[1]),
+            "ENGLISH stopwords must remain sorted for binary_search"
+        );
+    }
+
+    #[test]
+    fn is_english_stopword_smoke() {
+        assert!(is_english_stopword("the"));
+        assert!(!is_english_stopword("tokio"));
     }
 }

@@ -18,6 +18,7 @@ pub use flash::{FlashText, KeywordMatch};
 pub use fold::{fold, strip_diacritics};
 pub use subword::{BpeTokenizer, SubwordTokenizer};
 pub use tokenize::Token;
+pub use tokenize::TokenRef;
 pub use unicode::{nfc, nfkc};
 
 /// Policy/config for constructing normalized keys / comparison forms.
