@@ -7,8 +7,10 @@
 
 pub mod flash;
 pub mod fold;
+pub mod html;
 pub mod ngram;
 pub mod similarity;
+pub mod spans;
 pub mod stopwords;
 pub mod subword;
 pub mod tokenize;
@@ -16,6 +18,8 @@ pub mod unicode;
 
 pub use flash::{FlashText, KeywordMatch};
 pub use fold::{fold, strip_diacritics};
+pub use html::decode_entities;
+pub use spans::clean_span_boundary;
 pub use subword::{BpeTokenizer, SubwordTokenizer};
 pub use tokenize::Token;
 pub use tokenize::TokenRef;
