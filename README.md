@@ -1,5 +1,9 @@
 # textprep
 
+[![crates.io](https://img.shields.io/crates/v/textprep.svg)](https://crates.io/crates/textprep)
+[![Documentation](https://docs.rs/textprep/badge.svg)](https://docs.rs/textprep)
+[![CI](https://github.com/arclabs561/textprep/actions/workflows/ci.yml/badge.svg)](https://github.com/arclabs561/textprep/actions/workflows/ci.yml)
+
 Text preprocessing primitives: normalization, tokenization, and fast keyword matching.
 
 ## Contract
@@ -32,3 +36,7 @@ let found = ft.find(text);
 // found[0].start/end are CHAR offsets (not byte offsets)
 assert_eq!(found[0].value, "New York");
 ```
+
+## License
+
+MIT OR Apache-2.0
