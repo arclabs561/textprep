@@ -63,7 +63,9 @@ pub fn decode_entities(text: &str) -> String {
 fn decode_one(entity: &str) -> Option<char> {
     // Numeric: &#NNN; or &#xHH;
     if let Some(stripped) = entity.strip_prefix('#') {
-        return if let Some(hex) = stripped.strip_prefix('x').or_else(|| stripped.strip_prefix('X'))
+        return if let Some(hex) = stripped
+            .strip_prefix('x')
+            .or_else(|| stripped.strip_prefix('X'))
         {
             u32::from_str_radix(hex, 16).ok().and_then(char::from_u32)
         } else {
