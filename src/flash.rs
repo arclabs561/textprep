@@ -12,6 +12,20 @@ pub struct KeywordMatch {
     pub end: usize,
 }
 
+/// Fast keyword matching using Aho-Corasick.
+///
+/// ```
+/// use textprep::FlashText;
+///
+/// let mut ft = FlashText::new();
+/// ft.add_keyword("New York", "NYC");
+/// ft.add_keyword("San Francisco", "SF");
+///
+/// let matches = ft.find("I flew from New York to San Francisco.");
+/// assert_eq!(matches.len(), 2);
+/// assert_eq!(matches[0].value, "NYC");
+/// assert_eq!(matches[1].value, "SF");
+/// ```
 pub struct FlashText {
     keywords: HashMap<String, String>,
     matcher: Option<AhoCorasick>,

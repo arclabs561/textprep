@@ -2,6 +2,15 @@
 
 use unicode_normalization::UnicodeNormalization;
 
+/// Strip combining marks (diacritics) from text.
+///
+/// ```
+/// use textprep::strip_diacritics;
+///
+/// assert_eq!(strip_diacritics("Müller"), "Muller");
+/// assert_eq!(strip_diacritics("naïve"), "naive");
+/// assert_eq!(strip_diacritics("ASCII"), "ASCII"); // no-op
+/// ```
 pub fn strip_diacritics(text: &str) -> String {
     text.nfd().filter(|c| !is_combining_mark(*c)).collect()
 }
@@ -14,6 +23,13 @@ fn is_combining_mark(c: char) -> bool {
 ///
 /// This is **not** full Unicode case folding. For search/index keys where
 /// full case folding matters, prefer `fold_nfkc_casefold` (feature-gated).
+///
+/// ```
+/// use textprep::fold::fold;
+///
+/// assert_eq!(fold("Hello WORLD"), "hello world");
+/// assert_eq!(fold("Ω"), "ω");
+/// ```
 pub fn fold(text: &str) -> String {
     text.to_lowercase()
 }

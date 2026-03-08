@@ -138,11 +138,32 @@ impl Default for ScrubConfig {
 /// A convenience function to perform a default "scrub" of text.
 ///
 /// Normalizes to NFC, folds case, and strips diacritics.
+///
+/// ```
+/// use textprep::scrub;
+///
+/// assert_eq!(scrub("Müller"), "muller");
+/// assert_eq!(scrub("Ñoño"), "nono");
+/// assert_eq!(scrub("Café"), "cafe");
+/// ```
 pub fn scrub(text: &str) -> String {
     scrub_with(text, &ScrubConfig::default())
 }
 
 /// Scrub text using an explicit policy.
+///
+/// ```
+/// use textprep::{scrub_with, ScrubConfig, ScrubNormalization, ScrubCase};
+///
+/// let cfg = ScrubConfig {
+///     normalization: ScrubNormalization::Nfkc,
+///     case: ScrubCase::Lower,
+///     strip_diacritics: true,
+///     collapse_whitespace: true,
+///     ..ScrubConfig::default()
+/// };
+/// assert_eq!(scrub_with("  Ångström  Units  ", &cfg), "angstrom units");
+/// ```
 pub fn scrub_with(text: &str, cfg: &ScrubConfig) -> String {
     // `scrub_with` is a small pipeline. We try to be explicit about what steps are
     // allocation-amortized (via `*_into`) versus which steps necessarily allocate

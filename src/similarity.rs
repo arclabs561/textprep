@@ -14,6 +14,13 @@ use std::collections::HashSet;
 /// Returns a value in \([0, 1]\), where \(1\) means identical token sets.
 ///
 /// Case-insensitive: lowercases both inputs first.
+///
+/// ```
+/// use textprep::similarity::word_jaccard;
+///
+/// assert!((word_jaccard("hello world", "world hello") - 1.0).abs() < 1e-9);
+/// assert!(word_jaccard("hello", "world") < 0.01);
+/// ```
 pub fn word_jaccard(a: &str, b: &str) -> f64 {
     let a_lower = a.to_lowercase();
     let b_lower = b.to_lowercase();

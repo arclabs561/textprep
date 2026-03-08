@@ -61,6 +61,17 @@ pub fn tokenize_refs_with_offsets(text: &str) -> Vec<TokenRef<'_>> {
     tokens
 }
 
+/// Tokenize text into words with character offsets.
+///
+/// ```
+/// use textprep::tokenize::tokenize_with_offsets;
+///
+/// let tokens = tokenize_with_offsets("Hello, world!");
+/// assert_eq!(tokens.len(), 2);
+/// assert_eq!(tokens[0].text, "Hello");
+/// assert_eq!(tokens[1].text, "world");
+/// assert_eq!(tokens[1].start, 7);
+/// ```
 pub fn tokenize_with_offsets(text: &str) -> Vec<Token> {
     tokenize_refs_with_offsets(text)
         .into_iter()
