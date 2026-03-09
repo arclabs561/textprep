@@ -29,6 +29,7 @@ casefold = ["dep:unicode-casefold"]
 proptest = "1.9"
 criterion = "0.7"
 serde_json = "1.0"
+gramdex = "0.1"
 
 [[bench]]
 name = "textprep_bench"
