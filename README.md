@@ -8,7 +8,7 @@ Text preprocessing primitives: normalization, tokenization, n-grams, string simi
 
 ```toml
 [dependencies]
-textprep = "0.1.1"
+textprep = "0.1.4"
 ```
 
 ## Normalization
