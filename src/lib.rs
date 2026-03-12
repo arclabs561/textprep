@@ -1,3 +1,4 @@
+#![warn(missing_docs)]
 //! # textprep
 //!
 //! Text preprocessing primitives for the representational stack.
