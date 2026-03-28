@@ -140,9 +140,17 @@ pub fn is_english_stopword(token: &str) -> bool {
     ENGLISH.binary_search(&token).is_ok()
 }
 
+/// Return the stopword set for a language.
+///
+/// The English set is cached after the first call to avoid repeated allocation.
+/// Unknown languages return an empty set (always a new allocation).
 pub fn get(lang: &str) -> HashSet<String> {
+    static ENGLISH_SET: std::sync::OnceLock<HashSet<String>> = std::sync::OnceLock::new();
+
     match lang.to_lowercase().as_str() {
-        "en" | "english" => ENGLISH.iter().map(|s| s.to_string()).collect(),
+        "en" | "english" => ENGLISH_SET
+            .get_or_init(|| ENGLISH.iter().map(|s| s.to_string()).collect())
+            .clone(),
         _ => HashSet::new(),
     }
 }

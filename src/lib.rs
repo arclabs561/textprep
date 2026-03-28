@@ -21,7 +21,8 @@ pub use flash::{FlashText, KeywordMatch};
 pub use fold::{fold, strip_diacritics};
 pub use html::decode_entities;
 pub use spans::clean_span_boundary;
-pub use subword::{BpeTokenizer, SubwordTokenizer};
+#[allow(deprecated)]
+pub use subword::{BpeTokenizer, SubwordTokenizer, VocabTokenizer};
 pub use tokenize::Token;
 pub use tokenize::TokenRef;
 pub use unicode::{nfc, nfkc};
