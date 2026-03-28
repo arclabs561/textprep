@@ -4,7 +4,7 @@
 [![Documentation](https://docs.rs/textprep/badge.svg)](https://docs.rs/textprep)
 [![CI](https://github.com/arclabs561/textprep/actions/workflows/ci.yml/badge.svg)](https://github.com/arclabs561/textprep/actions/workflows/ci.yml)
 
-Text preprocessing primitives: normalization, tokenization, n-grams, string similarity, stopwords, and fast keyword matching.
+Text preprocessing primitives.
 
 ```toml
 [dependencies]
