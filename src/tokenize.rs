@@ -10,18 +10,34 @@ pub fn sentences(text: &str) -> Vec<&str> {
     text.unicode_sentences().collect()
 }
 
+/// A borrowed token with character offsets into the source text.
+///
+/// `start` and `end` are **character offsets** (Unicode scalar values), not byte
+/// offsets. To recover the substring from the original text, use
+/// `text.chars().skip(start).take(end - start).collect::<String>()`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TokenRef<'a> {
+    /// The token text (borrowed slice).
     pub text: &'a str,
+    /// Character offset where the token starts (inclusive).
     pub start: usize,
+    /// Character offset where the token ends (exclusive).
     pub end: usize,
 }
 
+/// An owned token with character offsets into the source text.
+///
+/// `start` and `end` are **character offsets** (Unicode scalar values), not byte
+/// offsets. To recover the substring from the original text, use
+/// `text.chars().skip(start).take(end - start).collect::<String>()`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Token {
+    /// The token text.
     pub text: String,
+    /// Character offset where the token starts (inclusive).
     pub start: usize,
+    /// Character offset where the token ends (exclusive).
     pub end: usize,
 }
 
