@@ -2,6 +2,7 @@
 
 use std::collections::HashSet;
 
+/// Sorted list of common English stopwords.
 pub const ENGLISH: &[&str] = &[
     "a",
     "about",

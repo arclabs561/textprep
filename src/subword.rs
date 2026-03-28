@@ -12,6 +12,7 @@ use std::collections::HashMap;
 ///
 /// Returns a sequence of token IDs for input text.
 pub trait SubwordTokenizer: Send + Sync {
+    /// Tokenize text into a sequence of token IDs.
     fn tokenize(&self, text: &str) -> Vec<u32>;
 }
 

@@ -53,16 +53,23 @@ pub struct ScrubConfig {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+/// Unicode normalization form to apply during scrubbing.
 pub enum ScrubNormalization {
+    /// No normalization.
     None,
+    /// NFC normalization.
     Nfc,
+    /// NFKC normalization.
     Nfkc,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+/// Case transformation to apply during scrubbing.
 pub enum ScrubCase {
+    /// No case change.
     None,
+    /// Lowercase via `str::to_lowercase`.
     Lower,
     /// Full Unicode case folding (NFKC_Casefold). Requires `casefold` feature.
     #[cfg(feature = "casefold")]
