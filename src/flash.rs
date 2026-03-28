@@ -5,10 +5,15 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+/// A single keyword match with character offsets.
 pub struct KeywordMatch {
+    /// The matched keyword pattern.
     pub keyword: String,
+    /// The value associated with the keyword.
     pub value: String,
+    /// Character offset where the match starts (inclusive).
     pub start: usize,
+    /// Character offset where the match ends (exclusive).
     pub end: usize,
 }
 
@@ -34,6 +39,7 @@ pub struct FlashText {
 }
 
 impl FlashText {
+    /// Create a new case-insensitive keyword matcher.
     pub fn new() -> Self {
         Self {
             keywords: HashMap::new(),
@@ -43,6 +49,7 @@ impl FlashText {
         }
     }
 
+    /// Add a keyword pattern with an associated replacement value.
     pub fn add_keyword(&mut self, keyword: impl Into<String>, value: impl Into<String>) {
         let kw = keyword.into();
         let val = value.into();
@@ -106,6 +113,7 @@ impl FlashText {
         }
     }
 
+    /// Find all keyword matches in the text, returning owned results.
     pub fn find(&mut self, text: &str) -> Vec<KeywordMatch> {
         let mut matches = Vec::new();
         self.find_into(text, &mut matches);

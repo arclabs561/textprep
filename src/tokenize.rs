@@ -2,10 +2,12 @@
 
 use unicode_segmentation::UnicodeSegmentation;
 
+/// Split text into Unicode words.
 pub fn words(text: &str) -> Vec<&str> {
     text.unicode_words().collect()
 }
 
+/// Split text into Unicode sentences.
 pub fn sentences(text: &str) -> Vec<&str> {
     text.unicode_sentences().collect()
 }
@@ -41,6 +43,7 @@ pub struct Token {
     pub end: usize,
 }
 
+/// Tokenize text into borrowed word tokens with character offsets.
 pub fn tokenize_refs_with_offsets(text: &str) -> Vec<TokenRef<'_>> {
     let mut tokens = Vec::new();
     // `unicode_word_indices()` yields (byte_offset, &str). Converting byte→char offsets

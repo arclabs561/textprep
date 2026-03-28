@@ -2,18 +2,22 @@
 
 use unicode_normalization::UnicodeNormalization;
 
+/// Return the NFC (Canonical Decomposition, followed by Canonical Composition) form of the text.
 pub fn nfc(text: &str) -> String {
     text.nfc().collect()
 }
 
+/// Return the NFD (Canonical Decomposition) form of the text.
 pub fn nfd(text: &str) -> String {
     text.nfd().collect()
 }
 
+/// Return the NFKC (Compatibility Decomposition, followed by Canonical Composition) form of the text.
 pub fn nfkc(text: &str) -> String {
     text.nfkc().collect()
 }
 
+/// Return the NFKD (Compatibility Decomposition) form of the text.
 pub fn nfkd(text: &str) -> String {
     text.nfkd().collect()
 }
