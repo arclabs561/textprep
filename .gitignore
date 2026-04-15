@@ -9,3 +9,4 @@ fuzz/Cargo.lock
 
 # proptest failure persistence
 *.proptest-regressions
+Cargo.lock
