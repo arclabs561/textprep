@@ -82,6 +82,10 @@ pub fn char_ngram_jaccard(a: &str, b: &str, n: usize) -> f64 {
 }
 
 /// Convenience: trigram (\(n=3\)) Jaccard similarity on characters.
+///
+/// This function normalizes case and handles identical short strings (length < 3)
+/// as exact matches (returns 1.0). For candidate retrieval use cases, see
+/// `gramdex::trigram_jaccard`, which skips case-folding and returns `f32`.
 pub fn trigram_jaccard(a: &str, b: &str) -> f64 {
     char_ngram_jaccard(a, b, 3)
 }
