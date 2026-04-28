@@ -8,7 +8,7 @@ Text preprocessing primitives.
 
 ```toml
 [dependencies]
-textprep = "0.1.4"
+textprep = "0.1"
 ```
 
 ## Normalization
