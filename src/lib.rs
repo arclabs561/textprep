@@ -23,8 +23,9 @@ pub use html::decode_entities;
 pub use spans::clean_span_boundary;
 #[allow(deprecated)]
 pub use subword::{BpeTokenizer, SubwordTokenizer, VocabTokenizer};
-pub use tokenize::Token;
-pub use tokenize::TokenRef;
+pub use tokenize::{
+    sentences, tokenize_refs_with_offsets, tokenize_with_offsets, words, Token, TokenRef,
+};
 pub use unicode::{nfc, nfkc};
 
 /// Policy/config for constructing normalized keys / comparison forms.
