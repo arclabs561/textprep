@@ -8,7 +8,7 @@ Text preprocessing primitives.
 
 ```toml
 [dependencies]
-textprep = "0.1"
+textprep = "0.1.6"
 ```
 
 ## Normalization
@@ -129,6 +129,13 @@ let decoded = decode_entities("&amp; &lt;"); // "& <"
 |---------|-------------|
 | `casefold` | Full Unicode NFKC_Casefold (e.g. sharp-s to "ss") |
 | `serde` | Serialize/deserialize for `Token`, `KeywordMatch`, `ScrubConfig` |
+
+## Examples
+
+```sh
+cargo run --release --example search_key_tokens
+cargo run --release --example fuzzy_token_match
+```
 
 ## License
 
