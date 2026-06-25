@@ -23,6 +23,8 @@ jobs:
 
       - name: test
         run: cargo test --all-features --all-targets
+      - name: run example assertions
+        run: cargo run --example search_key_tokens
 
       - name: doc-tests
         run: cargo test --all-features --doc
