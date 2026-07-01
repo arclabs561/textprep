@@ -132,8 +132,8 @@ let decoded = decode_entities("&amp; &lt;"); // "& <"
 
 ## Examples
 
-- `cargo run --release --example search_key_tokens` builds normalized token keys while preserving character offsets into the source text, the basis for mapping a search hit back to where it occurred in the original document.
-- `cargo run --release --example fuzzy_token_match` fuzzy-matches query strings against extracted tokens, the typo-tolerant lookup a search box needs.
+See [examples/README.md](examples/README.md) for runnable examples with
+captured output.
 
 ## License
 
