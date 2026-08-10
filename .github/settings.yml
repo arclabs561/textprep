@@ -2,7 +2,7 @@
 # https://github.com/repository-settings/app
 
 repository:
-  description: "Text preprocessing primitives"
+  description: "Text normalization, tokenization, and keyword matching primitives"
   homepage: "https://docs.rs/textprep"
   private: false
   has_issues: true

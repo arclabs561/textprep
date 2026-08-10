@@ -1,10 +1,9 @@
 # textprep
 
 [![crates.io](https://img.shields.io/crates/v/textprep.svg)](https://crates.io/crates/textprep)
-[![Documentation](https://docs.rs/textprep/badge.svg)](https://docs.rs/textprep)
-[![CI](https://github.com/arclabs561/textprep/actions/workflows/ci.yml/badge.svg)](https://github.com/arclabs561/textprep/actions/workflows/ci.yml)
+[![docs.rs](https://docs.rs/textprep/badge.svg)](https://docs.rs/textprep)
 
-Text preprocessing primitives.
+Text normalization, tokenization, and keyword matching primitives.
 
 ```toml
 [dependencies]
@@ -143,6 +142,14 @@ Token and keyword-match offsets continue to count Unicode scalar values.
 | `casefold` | Full Unicode NFKC_Casefold (e.g. sharp-s to "ss") |
 | `graphemes` | Typed conversion between byte, Unicode scalar, and grapheme boundaries; `unicode-segmentation` is already used by tokenization |
 | `serde` | Serialize/deserialize for `Token`, `KeywordMatch`, `ScrubConfig` |
+
+## Contracts and limitations
+
+- Token and keyword-match offsets count Unicode scalar values, not UTF-8 bytes.
+- Grapheme conversions accept only valid grapheme boundaries; interior scalar
+  or byte offsets return `None`.
+- The built-in stopword list is English-only. Other languages require a
+  caller-provided list.
 
 ## Examples
 
