@@ -7,6 +7,8 @@ Format: [Keep a Changelog](https://keepachangelog.com).
 
 ### Added
 
+- Optional `graphemes` API for typed conversion between UTF-8 byte, Unicode
+  scalar, and extended grapheme cluster boundaries.
 - `search_key_tokens` example showing normalized token keys with original character offsets.
 
 ## [0.1.6] - 2026-04-28

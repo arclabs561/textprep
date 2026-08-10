@@ -8,6 +8,8 @@
 
 pub mod flash;
 pub mod fold;
+#[cfg(feature = "graphemes")]
+pub mod graphemes;
 pub mod html;
 pub mod ngram;
 pub mod similarity;
@@ -19,6 +21,8 @@ pub mod unicode;
 
 pub use flash::{FlashText, KeywordMatch};
 pub use fold::{fold, strip_diacritics};
+#[cfg(feature = "graphemes")]
+pub use graphemes::{ByteOffset, CharOffset, GraphemeMap, GraphemeOffset};
 pub use html::decode_entities;
 pub use spans::clean_span_boundary;
 #[allow(deprecated)]

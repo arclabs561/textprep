@@ -123,11 +123,25 @@ let plain = strip_diacritics("cafe\u{0301}"); // "cafe"
 let decoded = decode_entities("&amp; &lt;"); // "& <"
 ```
 
+With the `graphemes` feature, `GraphemeMap` converts between UTF-8 byte,
+Unicode scalar, and extended grapheme cluster boundaries:
+
+```rust
+use textprep::{CharOffset, GraphemeMap};
+
+let map = GraphemeMap::new("e\u{301}");
+assert_eq!(map.char_to_grapheme(CharOffset::new(0)).unwrap().get(), 0);
+assert_eq!(map.char_to_grapheme(CharOffset::new(1)), None);
+```
+
+Token and keyword-match offsets continue to count Unicode scalar values.
+
 ## Feature flags
 
 | Feature | What it adds |
 |---------|-------------|
 | `casefold` | Full Unicode NFKC_Casefold (e.g. sharp-s to "ss") |
+| `graphemes` | Typed conversion between byte, Unicode scalar, and grapheme boundaries; `unicode-segmentation` is already used by tokenization |
 | `serde` | Serialize/deserialize for `Token`, `KeywordMatch`, `ScrubConfig` |
 
 ## Examples
