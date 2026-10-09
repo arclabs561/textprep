@@ -11,8 +11,14 @@ use unicode_normalization::UnicodeNormalization;
 /// assert_eq!(strip_diacritics("naïve"), "naive");
 /// assert_eq!(strip_diacritics("ASCII"), "ASCII"); // no-op
 /// ```
+///
+/// The result is recomposed to NFC, so base characters that carry no
+/// stripped mark stay in their composed form (e.g. Hangul syllables).
 pub fn strip_diacritics(text: &str) -> String {
-    text.nfd().filter(|c| !is_combining_mark(*c)).collect()
+    text.nfd()
+        .filter(|c| !is_combining_mark(*c))
+        .nfc()
+        .collect()
 }
 
 fn is_combining_mark(c: char) -> bool {
@@ -63,5 +69,14 @@ mod tests {
     #[test]
     fn test_strip_diacritics() {
         assert_eq!(strip_diacritics("Müller"), "Muller");
+    }
+
+    #[test]
+    fn strip_diacritics_output_is_nfc() {
+        // Hangul syllables decompose to jamo under NFD; none are marks, so
+        // they must come back composed.
+        let out = strip_diacritics("한글 café");
+        assert_eq!(out, "한글 cafe");
+        assert!(unicode_normalization::is_nfc(&out));
     }
 }

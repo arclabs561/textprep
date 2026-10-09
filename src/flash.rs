@@ -19,6 +19,12 @@ pub struct KeywordMatch {
 
 /// Fast keyword matching using Aho-Corasick.
 ///
+/// Matches must fall on word boundaries: `cat` does not match inside
+/// `concatenate`. A word character is alphanumeric or `_`, so keywords in
+/// scripts written without spaces only match when delimited by other
+/// characters. If the longest keyword at a position is rejected for
+/// crossing a boundary, shorter keywords at that position are not retried.
+///
 /// ```
 /// use textprep::FlashText;
 ///
@@ -83,6 +89,9 @@ impl FlashText {
         let mut last_char = 0usize;
 
         for mat in matcher.find_iter(text) {
+            if !on_word_boundaries(text, mat.start(), mat.end()) {
+                continue;
+            }
             let pattern = &self.pattern_list[mat.pattern()];
             let value = self
                 .keywords
@@ -121,6 +130,25 @@ impl FlashText {
     }
 }
 
+fn is_word_char(c: char) -> bool {
+    c.is_alphanumeric() || c == '_'
+}
+
+/// A match is kept only if it does not start or end inside a word: where the
+/// keyword's edge character is a word character, the neighbouring text
+/// character must not be one.
+fn on_word_boundaries(text: &str, start: usize, end: usize) -> bool {
+    let first = text[start..end].chars().next();
+    let last = text[start..end].chars().next_back();
+    let before = text[..start].chars().next_back();
+    let after = text[end..].chars().next();
+    let ok = |edge: Option<char>, neighbour: Option<char>| match (edge, neighbour) {
+        (Some(e), Some(n)) => !(is_word_char(e) && is_word_char(n)),
+        _ => true,
+    };
+    ok(first, before) && ok(last, after)
+}
+
 impl Default for FlashText {
     fn default() -> Self {
         Self::new()
@@ -130,6 +158,20 @@ impl Default for FlashText {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn keyword_does_not_match_inside_a_longer_word() {
+        let mut ft = FlashText::new();
+        ft.add_keyword("cat", "feline");
+        assert!(ft.find("concatenate").is_empty());
+        assert!(ft.find("cats").is_empty());
+        assert!(ft.find("under_cat").is_empty());
+        let m = ft.find("a cat, a Cat. (cat)");
+        assert_eq!(
+            m.iter().map(|m| m.start).collect::<Vec<_>>(),
+            vec![2, 9, 15]
+        );
+    }
 
     #[test]
     fn test_find_char_offsets_are_correct_for_unicode() {
