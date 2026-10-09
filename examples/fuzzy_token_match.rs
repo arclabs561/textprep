@@ -66,7 +66,7 @@ fn main() {
             .filter(|&(_, sim)| sim >= THRESHOLD)
             .collect();
 
-        matches.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        matches.sort_by(|a, b| b.1.total_cmp(&a.1));
 
         if matches.is_empty() {
             println!("  (no matches above threshold {THRESHOLD})\n");

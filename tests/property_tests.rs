@@ -242,6 +242,13 @@ proptest! {
     }
 
     #[test]
+    fn scrub_default_is_idempotent(s in any_reasonable_string()) {
+        let out1 = textprep::scrub(&s);
+        let out2 = textprep::scrub(&out1);
+        prop_assert_eq!(out1, out2);
+    }
+
+    #[test]
     fn scrub_search_key_is_idempotent(s in any_reasonable_string()) {
         let cfg = textprep::ScrubConfig::search_key();
         let out1 = textprep::scrub_with(&s, &cfg);
