@@ -40,11 +40,17 @@ pub fn fold(text: &str) -> String {
     text.to_lowercase()
 }
 
-/// Normalize to NFKC and then apply full Unicode case folding (NFKC_Casefold).
+/// Normalize to NFKC and then apply full Unicode case folding.
 ///
 /// This is useful for building robust lookup keys for identifiers/names:
 /// it removes compatibility distinctions (NFKC) and applies language-agnostic
 /// case folding.
+///
+/// This is not exactly the Unicode `NFKC_Casefold` mapping (UAX #44): that
+/// also applies NFKC again after folding and removes Default_Ignorable code
+/// points (soft hyphen, ZWJ/ZWNJ, variation selectors). Here those code
+/// points are kept, so [`crate::ScrubConfig::search_key`] can leave ZWJ/ZWNJ
+/// in place by policy.
 ///
 /// This is feature-gated to avoid pulling extra dependencies into minimal builds.
 #[cfg(feature = "casefold")]

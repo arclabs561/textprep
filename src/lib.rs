@@ -6,6 +6,11 @@
 //! Provides Unicode normalization, case folding, diacritics stripping,
 //! tokenization, and fast keyword matching.
 
+// Compile and run the README's Rust examples as doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+pub struct ReadmeDoctests;
+
 pub mod flash;
 pub mod fold;
 #[cfg(feature = "graphemes")]
@@ -76,7 +81,8 @@ pub enum ScrubCase {
     None,
     /// Lowercase via `str::to_lowercase`.
     Lower,
-    /// Full Unicode case folding (NFKC_Casefold). Requires `casefold` feature.
+    /// NFKC then full Unicode case folding (see [`fold::fold_nfkc_casefold`]
+    /// for how this differs from UAX #44 `NFKC_Casefold`). Requires `casefold` feature.
     #[cfg(feature = "casefold")]
     NfkcCasefold,
 }
@@ -92,7 +98,7 @@ impl ScrubConfig {
     /// - collapse whitespace
     /// - remove bidi controls (Trojan Source-style)
     /// - NFKC normalization (compatibility folding)
-    /// - case folding (full NFKC_Casefold when available)
+    /// - case folding (NFKC + full case folding when available)
     /// - strip diacritics
     #[cfg(feature = "casefold")]
     pub fn search_key() -> Self {

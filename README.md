@@ -26,6 +26,11 @@ assert_eq!(scrub_with(&tokens[2].text, &config), "zurich");
 assert_eq!((tokens[2].start, tokens[2].end), (9, 15));
 ```
 
+Calling `unicode-normalization`, `unicode-segmentation` and `aho-corasick`
+directly gives the same building blocks (`textprep` depends on them); use
+`textprep` for one scrub policy, word-boundary keyword matching and tokens with
+character offsets, or `deunicode` when you need ASCII transliteration.
+
 ## Choices and limits
 
 - Scrubbing is lossy: it can change case, normalization form, whitespace, and
