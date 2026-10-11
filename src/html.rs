@@ -38,8 +38,12 @@ pub fn decode_entities(text: &str) -> String {
         rest = &rest[amp_pos..]; // rest now starts with '&'
 
         // Look for the closing ';' within a reasonable window (max 12 chars for entity).
+        // Search bytes, not a `str` slice: 14 bytes can end inside a multi-byte
+        // character, and slicing there panicked. `;` is ASCII, so its byte
+        // index is always a char boundary.
         let search_end = rest.len().min(14); // &xxxxxxxxxxxx;
-        if let Some(semi_offset) = rest[..search_end].find(';') {
+        let window = &rest.as_bytes()[..search_end];
+        if let Some(semi_offset) = window.iter().position(|&b| b == b';') {
             let entity = &rest[1..semi_offset]; // between '&' and ';'
 
             if let Some(decoded) = decode_one(entity) {
@@ -124,6 +128,21 @@ mod tests {
     #[test]
     fn already_clean() {
         assert_eq!(decode_entities("no entities here"), "no entities here");
+    }
+
+    #[test]
+    fn multibyte_text_after_ampersand_does_not_panic() {
+        // The 14-byte search window used to end inside a 2-byte character.
+        assert_eq!(decode_entities("&ééééééé;"), "&ééééééé;");
+        // Every window offset, with 2-, 3- and 4-byte characters.
+        for filler in ["é", "€", "😀"] {
+            for prefix in 0..8 {
+                let text = format!("&{}{}&amp;", "a".repeat(prefix), filler.repeat(6));
+                assert!(decode_entities(&text).ends_with('&'));
+            }
+        }
+        // An entity right after multi-byte text still decodes.
+        assert_eq!(decode_entities("café&amp;crème"), "café&crème");
     }
 
     #[test]
