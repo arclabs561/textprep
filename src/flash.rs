@@ -59,8 +59,9 @@ impl FlashText {
     pub fn add_keyword(&mut self, keyword: impl Into<String>, value: impl Into<String>) {
         let kw = keyword.into();
         let val = value.into();
-        self.keywords.insert(kw.clone(), val);
-        self.pattern_list.push(kw);
+        if self.keywords.insert(kw.clone(), val).is_none() {
+            self.pattern_list.push(kw);
+        }
         self.matcher = None;
     }
 
@@ -158,6 +159,56 @@ impl Default for FlashText {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn exact_key_updates_keep_pattern_storage_bounded() {
+        let mut ft = FlashText::new();
+        ft.add_keyword("cat", "first");
+        ft.add_keyword("cat", "before build");
+        assert_eq!(ft.find("cat")[0].value, "before build");
+        for i in 0..8 {
+            ft.add_keyword("cat", format!("update {i}"));
+            assert_eq!(ft.find("cat")[0].value, format!("update {i}"));
+        }
+        assert_eq!(ft.keywords.len(), 1);
+        assert_eq!(ft.pattern_list, vec!["cat"]);
+    }
+
+    #[test]
+    fn exact_key_updates_preserve_values_offsets_and_case_ties() {
+        let mut ft = FlashText::new();
+        ft.add_keyword("cat", "first");
+        ft.add_keyword("CAT", "distinct key");
+        ft.add_keyword("cat", "before build");
+        ft.add_keyword("cat nap", "longer");
+        let expected = |value: &str| {
+            vec![
+                KeywordMatch {
+                    keyword: "cat".into(),
+                    value: value.into(),
+                    start: 2,
+                    end: 5,
+                },
+                KeywordMatch {
+                    keyword: "cat nap".into(),
+                    value: "longer".into(),
+                    start: 7,
+                    end: 14,
+                },
+            ]
+        };
+        let text = "é CAT, cat nap.";
+        let mut out = ft.find(text);
+        assert_eq!(out, expected("before build"));
+        ft.add_keyword("CAT", "distinct updated");
+        ft.add_keyword("cat", "after build");
+        assert!(ft.matcher.is_none());
+        ft.find_into(text, &mut out);
+        assert_eq!(out, expected("after build"));
+        assert_eq!(ft.keywords["CAT"], "distinct updated");
+        ft.find_into("no match", &mut out);
+        assert!(out.is_empty());
+    }
 
     #[test]
     fn keyword_does_not_match_inside_a_longer_word() {
