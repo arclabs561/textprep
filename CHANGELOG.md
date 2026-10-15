@@ -3,6 +3,15 @@
 All notable changes to this crate are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com).
 
+## Source history (unversioned)
+
+These source changes are listed without assigning them to a published release.
+
+### Fixed
+
+- Repeated registration of an exact keyword updates its replacement without accumulating duplicate matcher patterns. Case-distinct registrations, first-registration order and match offsets are preserved.
+  ([source change](https://github.com/arclabs561/textprep/commit/d0f449f2a31b83b0981f963955dc9eb4342045ed))
+
 ## [Unreleased]
 
 ### Added
