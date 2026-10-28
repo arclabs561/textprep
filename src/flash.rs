@@ -139,6 +139,11 @@ fn is_word_char(c: char) -> bool {
 /// keyword's edge character is a word character, the neighbouring text
 /// character must not be one.
 fn on_word_boundaries(text: &str, start: usize, end: usize) -> bool {
+    // Empty patterns can match between UTF-8 bytes in Aho-Corasick. Only
+    // character boundaries can be sliced or expressed as character offsets.
+    if !text.is_char_boundary(start) || !text.is_char_boundary(end) {
+        return false;
+    }
     let first = text[start..end].chars().next();
     let last = text[start..end].chars().next_back();
     let before = text[..start].chars().next_back();
