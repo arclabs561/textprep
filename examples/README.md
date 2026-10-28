@@ -11,7 +11,7 @@ captured from release runs.
 | Fuzzy-match query strings against extracted tokens | `fuzzy_token_match` |
 | Tag dictionary entities in noisy web text | `gazetteer_tagging` |
 
-## Normalized Keys And Offsets
+## Normalized keys and offsets
 
 ### `search_key_tokens`: can matching use normalized keys without losing spans?
 
@@ -37,7 +37,7 @@ matches:
 The match key is normalized, but the reported offsets still point into the
 original text.
 
-## Fuzzy Token Lookup
+## Fuzzy token lookup
 
 ### `fuzzy_token_match`: which extracted tokens are close to a query?
 
@@ -69,7 +69,7 @@ Query: "svelt" (scrubbed: "svelt")
   0.750  "Svelte" (chars 34..40)
 ```
 
-## Gazetteer Tagging
+## Gazetteer tagging
 
 ### `gazetteer_tagging`: can dictionary tags survive web-text cleanup?
 
