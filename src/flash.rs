@@ -1,6 +1,6 @@
 //! Fast keyword matching using Aho-Corasick.
 
-use aho_corasick::{AhoCorasick, MatchKind};
+use aho_corasick::{AhoCorasick, Input, MatchKind};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -89,10 +89,20 @@ impl FlashText {
         let mut last_byte = 0usize;
         let mut last_char = 0usize;
 
-        for mat in matcher.find_iter(text) {
-            if !on_word_boundaries(text, mat.start(), mat.end()) {
+        // Search one match at a time instead of with `find_iter`, so a match
+        // rejected at a word boundary does not consume its span: a whole-word
+        // keyword can start inside it ("food" in "bobcat food").
+        let mut input = Input::new(text);
+        let mut last_end = None;
+        while let Some(mat) = matcher.find(input.clone()) {
+            // As `find_iter` does, skip an empty match at the previous match end.
+            let empty_at_last_end = mat.is_empty() && Some(mat.end()) == last_end;
+            if empty_at_last_end || !on_word_boundaries(text, mat.start(), mat.end()) {
+                input.set_start(mat.start() + 1);
                 continue;
             }
+            last_end = Some(mat.end());
+            input.set_start(mat.end() + usize::from(mat.is_empty()));
             let pattern = &self.pattern_list[mat.pattern()];
             let value = self
                 .keywords
@@ -227,6 +237,21 @@ mod tests {
             m.iter().map(|m| m.start).collect::<Vec<_>>(),
             vec![2, 9, 15]
         );
+    }
+
+    #[test]
+    fn rejected_match_does_not_hide_a_whole_word_keyword_inside_it() {
+        let mut ft = FlashText::new();
+        ft.add_keyword("food", "FOOD");
+        ft.add_keyword("cat food", "CATFOOD");
+        // "cat food" starts inside "bobcat" and is rejected; "food" is a
+        // whole word at chars 7..11.
+        let m = ft.find("bobcat food");
+        assert_eq!(
+            m.iter().map(|m| (m.start, m.end)).collect::<Vec<_>>(),
+            vec![(7, 11)]
+        );
+        assert_eq!(m[0].value, "FOOD");
     }
 
     #[test]

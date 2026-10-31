@@ -14,6 +14,12 @@ These source changes are listed without assigning them to a published release.
 
 ## [Unreleased]
 
+### Fixed
+
+- `FlashText::find` no longer lets a match rejected at a word boundary consume
+  its span, so a whole-word keyword that starts inside it is still found:
+  with keywords `food` and `cat food`, `"bobcat food"` now yields `food`.
+
 ### Added
 
 - Optional `graphemes` API for typed conversion between UTF-8 byte, Unicode
