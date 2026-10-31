@@ -14,6 +14,17 @@ These source changes are listed without assigning them to a published release.
 
 ## [Unreleased]
 
+### Changed
+
+- Behaviour change: the `casefold` feature now folds with `caseless` 0.2.2
+  (Unicode 16.0 `CaseFolding.txt`) instead of `unicode-casefold` 0.2.0
+  (Unicode 9.0). `fold_nfkc_casefold`, `fold_nfkc_casefold_into` and
+  `ScrubConfig::search_key` now fold capitals added after Unicode 9, such as
+  Georgian Mtavruli (U+1C90 folds to U+10D0), which were previously left
+  unchanged. Search keys for such text differ from earlier releases, so
+  indexes built with the old keys should be rebuilt. The feature name is
+  unchanged.
+
 ### Fixed
 
 - `FlashText::find` no longer lets a match rejected at a word boundary consume
