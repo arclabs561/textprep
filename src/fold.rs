@@ -55,17 +55,17 @@ pub fn fold(text: &str) -> String {
 /// This is feature-gated to avoid pulling extra dependencies into minimal builds.
 #[cfg(feature = "casefold")]
 pub fn fold_nfkc_casefold(text: &str) -> String {
-    use unicode_casefold::UnicodeCaseFold;
-    text.nfkc().case_fold().collect()
+    use caseless::Caseless;
+    text.nfkc().default_case_fold().collect()
 }
 
 /// Like `fold_nfkc_casefold`, but writes into an existing `String`.
 #[cfg(feature = "casefold")]
 pub fn fold_nfkc_casefold_into(text: &str, out: &mut String) {
-    use unicode_casefold::UnicodeCaseFold;
+    use caseless::Caseless;
     out.clear();
     out.reserve(text.len());
-    out.extend(text.nfkc().case_fold());
+    out.extend(text.nfkc().default_case_fold());
 }
 
 #[cfg(test)]
@@ -84,5 +84,16 @@ mod tests {
         let out = strip_diacritics("한글 café");
         assert_eq!(out, "한글 cafe");
         assert!(unicode_normalization::is_nfc(&out));
+    }
+
+    #[cfg(feature = "casefold")]
+    #[test]
+    fn casefold_covers_georgian_mtavruli() {
+        // U+1C90 GEORGIAN MTAVRULI CAPITAL LETTER AN (Unicode 11) folds to
+        // U+10D0 GEORGIAN LETTER AN.
+        assert_eq!(fold_nfkc_casefold("\u{1C90}"), "\u{10D0}");
+        let mut out = String::new();
+        fold_nfkc_casefold_into("\u{1C90}\u{1C91}", &mut out);
+        assert_eq!(out, "\u{10D0}\u{10D1}");
     }
 }

@@ -19,13 +19,13 @@ categories = ["text-processing"]
 unicode-normalization = "0.1"
 unicode-segmentation = "1.10"
 aho-corasick = "1.1"
-unicode-casefold = { version = "0.2", optional = true }
+caseless = { version = "0.2.2", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
 
 [features]
 default = []
 serde = ["dep:serde"]
-casefold = ["dep:unicode-casefold"]
+casefold = ["dep:caseless"]
 graphemes = []
 
 [dev-dependencies]
