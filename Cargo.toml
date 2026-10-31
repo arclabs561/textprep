@@ -30,7 +30,7 @@ graphemes = []
 
 [dev-dependencies]
 proptest = "1.9"
-criterion = "0.7"
+criterion = "0.8"
 serde_json = "1.0"
 gramdex = "0.1"
 
