@@ -3,19 +3,18 @@
 All notable changes to this crate are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com).
 
-## Source history (unversioned)
-
-These source changes are listed without assigning them to a published release.
-
-### Fixed
-
-- Repeated registration of an exact keyword updates its replacement without accumulating duplicate matcher patterns. Case-distinct registrations, first-registration order and match offsets are preserved.
-  ([source change](https://github.com/arclabs561/textprep/commit/d0f449f2a31b83b0981f963955dc9eb4342045ed))
-
 ## [Unreleased]
+
+## [0.2.0] - 2026-11-03
 
 ### Changed
 
+- Behaviour change: `FlashText` keywords now match only at word boundaries
+  (a word character is alphanumeric or `_`), so `cat` no longer matches inside
+  `concatenate`, `cats` or `under_cat`.
+- Behaviour change: `strip_diacritics` now returns NFC text instead of NFD, so
+  characters without a stripped mark (for example Hangul syllables) stay
+  composed.
 - Behaviour change: the `casefold` feature now folds with `caseless` 0.2.2
   (Unicode 16.0 `CaseFolding.txt`) instead of `unicode-casefold` 0.2.0
   (Unicode 9.0). `fold_nfkc_casefold`, `fold_nfkc_casefold_into` and
@@ -30,11 +29,20 @@ These source changes are listed without assigning them to a published release.
 - `FlashText::find` no longer lets a match rejected at a word boundary consume
   its span, so a whole-word keyword that starts inside it is still found:
   with keywords `food` and `cat food`, `"bobcat food"` now yields `food`.
+- Repeated registration of an exact keyword updates its replacement without
+  accumulating duplicate matcher patterns. Case-distinct registrations,
+  first-registration order and match offsets are preserved.
+- An empty keyword matches once at each character boundary and no longer
+  disrupts other matches on multi-byte text.
+- `decode_entities` no longer panics when the 14-byte entity search window
+  ends inside a multi-byte character (for example `"&ééééééé;"`).
 
 ### Added
 
 - Optional `graphemes` API for typed conversion between UTF-8 byte, Unicode
   scalar, and extended grapheme cluster boundaries.
+- `words`, `sentences`, `tokenize_with_offsets` and
+  `tokenize_refs_with_offsets` are re-exported at the crate root.
 - `search_key_tokens` example showing normalized token keys with original character offsets.
 
 ## [0.1.6] - 2026-04-28
