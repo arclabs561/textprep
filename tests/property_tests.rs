@@ -45,12 +45,10 @@ fn assert_flash_matches_sane(
         prop_assert!(last_end <= m.start);
 
         let extracted = slice_by_char_range(text, m.start, m.end);
-        // `FlashText` uses ASCII case-insensitive matching (configurable internally),
-        // so the matched substring may differ in ASCII casing from the pattern.
-        prop_assert_eq!(
-            extracted.to_ascii_lowercase(),
-            m.keyword.to_ascii_lowercase()
-        );
+        // `FlashText` lowercases each character before matching, so the matched
+        // substring may differ in case from the pattern.
+        let lower = |s: &str| s.chars().flat_map(char::to_lowercase).collect::<String>();
+        prop_assert_eq!(lower(&extracted), lower(&m.keyword));
 
         last_end = m.end;
     }
