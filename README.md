@@ -6,7 +6,7 @@ Text normalization, tokenization, and keyword matching primitives
 
 ```toml
 [dependencies]
-textprep = "0.1.6"
+textprep = "0.2.0"
 ```
 
 ## Usage
@@ -55,7 +55,7 @@ matches:
 Optional features:
 
 - `casefold`: full Unicode case folding for search keys.
-- `graphemes` (unreleased, not in 0.1.6): typed conversion between byte,
+- `graphemes`: typed conversion between byte,
   scalar, and grapheme boundaries.
 - `serde`: serialization for tokens, keyword matches, and scrub configuration.
 
