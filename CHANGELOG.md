@@ -5,6 +5,25 @@ Format: [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-03
+
+### Fixed
+
+- `decode_entities` follows the HTML5 rules for numeric character
+  references: `&#128;`..`&#159;` map through the windows-1252 table
+  (`&#146;` is `’`), `&#0;`, surrogates and values above U+10FFFF decode
+  to U+FFFD (previously out-of-range references such as `&#xFFFFFF;` were
+  left as text), and references with a sign (`&#+65;`) stay literal.
+- `char_ngrams` and `word_ngrams` return an empty `Vec` for `n == 0`
+  instead of panicking, as `token_ngrams` already did.
+- `strip_diacritics` also strips Hebrew niqqud and cantillation, Arabic
+  harakat and Quranic marks, and the Combining Diacritical Marks Extended
+  block (U+1AB0..U+1AFF). Combining marks of other scripts, such as kana
+  voicing marks and Indic vowel signs, are still kept.
+- Case-insensitive `FlashText` matching now lowercases non-ASCII
+  characters too, so `Müller` matches `MÜLLER`. Offsets still refer to the
+  original text.
+
 ## [0.2.0] - 2026-11-03
 
 ### Changed
