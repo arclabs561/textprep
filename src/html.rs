@@ -11,8 +11,12 @@
 /// - Decimal numeric: `&#123;`
 /// - Hexadecimal numeric: `&#x1F4A9;`, `&#X1f4a9;`
 ///
-/// Unrecognized named entities and malformed sequences are passed through
-/// unchanged.
+/// Numeric references follow HTML5: `&#128;`..`&#159;` map through the
+/// windows-1252 table (`&#146;` is `’`), and `&#0;`, surrogates and values
+/// above U+10FFFF decode to U+FFFD.
+///
+/// Unrecognized named entities and malformed sequences (including numeric
+/// references with no digits or with a sign) are passed through unchanged.
 ///
 /// # Examples
 ///
@@ -71,9 +75,9 @@ fn decode_one(entity: &str) -> Option<char> {
             .strip_prefix('x')
             .or_else(|| stripped.strip_prefix('X'))
         {
-            u32::from_str_radix(hex, 16).ok().and_then(char::from_u32)
+            numeric_reference(hex, 16)
         } else {
-            stripped.parse::<u32>().ok().and_then(char::from_u32)
+            numeric_reference(stripped, 10)
         };
     }
 
@@ -87,6 +91,58 @@ fn decode_one(entity: &str) -> Option<char> {
         "nbsp" => Some('\u{00A0}'),
         _ => None,
     }
+}
+
+/// Decode the digits of a numeric character reference as HTML5 does
+/// (WHATWG "numeric character reference end state").
+fn numeric_reference(digits: &str, radix: u32) -> Option<char> {
+    // Digits only: `u32::from_str_radix` would also accept a leading `+`.
+    if digits.is_empty() || !digits.chars().all(|c| c.is_digit(radix)) {
+        return None;
+    }
+    // The only remaining parse error is overflow, which is out of range.
+    let code = u32::from_str_radix(digits, radix).unwrap_or(u32::MAX);
+    let c = match code {
+        0x80..=0x9F => windows_1252(code as u8),
+        _ => char::from_u32(code),
+    };
+    // NUL, surrogates and values above U+10FFFF.
+    Some(c.filter(|&c| c != '\0').unwrap_or('\u{FFFD}'))
+}
+
+/// HTML5 maps references to C1 controls through windows-1252; the five bytes
+/// that windows-1252 leaves undefined keep their own code point.
+fn windows_1252(b: u8) -> Option<char> {
+    Some(match b {
+        0x80 => '\u{20AC}',
+        0x82 => '\u{201A}',
+        0x83 => '\u{0192}',
+        0x84 => '\u{201E}',
+        0x85 => '\u{2026}',
+        0x86 => '\u{2020}',
+        0x87 => '\u{2021}',
+        0x88 => '\u{02C6}',
+        0x89 => '\u{2030}',
+        0x8A => '\u{0160}',
+        0x8B => '\u{2039}',
+        0x8C => '\u{0152}',
+        0x8E => '\u{017D}',
+        0x91 => '\u{2018}',
+        0x92 => '\u{2019}',
+        0x93 => '\u{201C}',
+        0x94 => '\u{201D}',
+        0x95 => '\u{2022}',
+        0x96 => '\u{2013}',
+        0x97 => '\u{2014}',
+        0x98 => '\u{02DC}',
+        0x99 => '\u{2122}',
+        0x9A => '\u{0161}',
+        0x9B => '\u{203A}',
+        0x9C => '\u{0153}',
+        0x9E => '\u{017E}',
+        0x9F => '\u{0178}',
+        _ => char::from(b),
+    })
 }
 
 #[cfg(test)]
@@ -179,7 +235,42 @@ mod tests {
 
     #[test]
     fn invalid_numeric() {
-        // Invalid code point passes through.
-        assert_eq!(decode_entities("&#xFFFFFF;"), "&#xFFFFFF;");
+        // Out-of-range code points decode to U+FFFD, as in HTML5.
+        assert_eq!(decode_entities("&#xFFFFFF;"), "\u{FFFD}");
+        // Digits that overflow u32 are also out of range.
+        assert_eq!(decode_entities("&#99999999999;"), "\u{FFFD}");
+        // No digits: not a character reference.
+        assert_eq!(decode_entities("&#;"), "&#;");
+        assert_eq!(decode_entities("&#x;"), "&#x;");
+    }
+
+    #[test]
+    fn decode_entities_follows_html5_numeric_rules() {
+        // 0x80..=0x9F map through the windows-1252 table.
+        assert_eq!(decode_entities("don&#146;t"), "don\u{2019}t");
+        assert_eq!(decode_entities("&#150;"), "\u{2013}");
+        assert_eq!(decode_entities("&#x80;"), "\u{20AC}");
+        assert_eq!(decode_entities("&#x9F;"), "\u{0178}");
+        // Bytes windows-1252 leaves undefined keep their own code point.
+        assert_eq!(decode_entities("&#x81;"), "\u{0081}");
+        // NUL, surrogates and values above U+10FFFF become U+FFFD.
+        assert_eq!(decode_entities("&#0;"), "\u{FFFD}");
+        assert_eq!(decode_entities("&#xD800;"), "\u{FFFD}");
+        assert_eq!(decode_entities("&#xDFFF;"), "\u{FFFD}");
+        assert_eq!(decode_entities("&#x110000;"), "\u{FFFD}");
+        // Control: ordinary code points around those ranges are unchanged.
+        assert_eq!(
+            decode_entities("&#x7F;&#xA0;&#xD7FF;&#xE000;&#x10FFFF;"),
+            "\u{7F}\u{A0}\u{D7FF}\u{E000}\u{10FFFF}"
+        );
+    }
+
+    #[test]
+    fn decode_entities_rejects_plus_sign() {
+        assert_eq!(decode_entities("&#+65;"), "&#+65;");
+        assert_eq!(decode_entities("&#x+41;"), "&#x+41;");
+        assert_eq!(decode_entities("&#-65;"), "&#-65;");
+        // Control: unsigned digits still decode.
+        assert_eq!(decode_entities("&#65;&#x41;"), "AA");
     }
 }

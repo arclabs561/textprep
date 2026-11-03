@@ -8,10 +8,11 @@
 /// let trigrams = char_ngrams("hello", 3);
 /// assert_eq!(trigrams, vec!["hel", "ell", "llo"]);
 /// assert!(char_ngrams("hi", 3).is_empty()); // too short
+/// assert!(char_ngrams("hi", 0).is_empty());
 /// ```
 pub fn char_ngrams(text: &str, n: usize) -> Vec<String> {
     let chars: Vec<char> = text.chars().collect();
-    if chars.len() < n {
+    if n == 0 || chars.len() < n {
         return Vec::new();
     }
     let mut result = Vec::with_capacity(chars.len() - n + 1);
@@ -28,9 +29,10 @@ pub fn char_ngrams(text: &str, n: usize) -> Vec<String> {
 ///
 /// let bigrams = word_ngrams(&["the", "quick", "fox"], 2);
 /// assert_eq!(bigrams, vec!["the quick", "quick fox"]);
+/// assert!(word_ngrams(&["the"], 0).is_empty());
 /// ```
 pub fn word_ngrams(words: &[&str], n: usize) -> Vec<String> {
-    if words.len() < n {
+    if n == 0 || words.len() < n {
         return Vec::new();
     }
     let mut result = Vec::with_capacity(words.len() - n + 1);
@@ -53,4 +55,25 @@ pub fn token_ngrams<'a>(words: &'a [&'a str], n: usize) -> Vec<Vec<&'a str>> {
         result.push(window.to_vec());
     }
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn char_ngrams_n_zero_does_not_panic() {
+        assert!(char_ngrams("abc", 0).is_empty());
+        assert!(char_ngrams("", 0).is_empty());
+        // Control: n == 1 yields one gram per character.
+        assert_eq!(char_ngrams("ab", 1), vec!["a", "b"]);
+    }
+
+    #[test]
+    fn word_ngrams_n_zero_does_not_panic() {
+        assert!(word_ngrams(&["a", "b"], 0).is_empty());
+        assert!(word_ngrams(&[], 0).is_empty());
+        // Control: n == 1 yields one gram per word.
+        assert_eq!(word_ngrams(&["a", "b"], 1), vec!["a", "b"]);
+    }
 }

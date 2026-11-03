@@ -46,6 +46,11 @@ pub struct FlashText {
 
 impl FlashText {
     /// Create a new case-insensitive keyword matcher.
+    ///
+    /// Keywords and text are compared after lowercasing each character with
+    /// `char::to_lowercase`, so `Müller` matches `MÜLLER`. This is not full
+    /// case folding: `straße` does not match `STRASSE`. Match offsets refer
+    /// to the original text.
     pub fn new() -> Self {
         Self {
             keywords: HashMap::new(),
@@ -67,10 +72,15 @@ impl FlashText {
 
     fn ensure_built(&mut self) {
         if self.matcher.is_none() {
+            let patterns: Vec<String> = if self.case_insensitive {
+                self.pattern_list.iter().map(|p| lowercase(p)).collect()
+            } else {
+                self.pattern_list.clone()
+            };
             let ac = AhoCorasick::builder()
                 .match_kind(MatchKind::LeftmostLongest)
                 .ascii_case_insensitive(self.case_insensitive)
-                .build(&self.pattern_list)
+                .build(&patterns)
                 .expect("failed to build Aho-Corasick matcher");
             self.matcher = Some(ac);
         }
@@ -84,6 +94,25 @@ impl FlashText {
         self.ensure_built();
         let matcher = self.matcher.as_ref().unwrap();
 
+        // Patterns are lowercased per character. ASCII text is matched as is
+        // (`ascii_case_insensitive` covers it); other text is matched in a
+        // lowercased copy whose byte offsets `source` maps back to `text`.
+        let lowered;
+        let mut source = Vec::new();
+        let haystack = if self.case_insensitive && !text.is_ascii() {
+            lowered = lowercase_with_source(text, &mut source);
+            lowered.as_str()
+        } else {
+            text
+        };
+        let to_source = |i: usize| {
+            if source.is_empty() {
+                Some(i)
+            } else {
+                source[i]
+            }
+        };
+
         // `aho-corasick` yields byte offsets. Convert to char offsets in a single pass
         // by incrementally advancing from the last match boundary.
         let mut last_byte = 0usize;
@@ -92,15 +121,20 @@ impl FlashText {
         // Search one match at a time instead of with `find_iter`, so a match
         // rejected at a word boundary does not consume its span: a whole-word
         // keyword can start inside it ("food" in "bobcat food").
-        let mut input = Input::new(text);
+        let mut input = Input::new(haystack);
         let mut last_end = None;
         while let Some(mat) = matcher.find(input.clone()) {
             // As `find_iter` does, skip an empty match at the previous match end.
             let empty_at_last_end = mat.is_empty() && Some(mat.end()) == last_end;
-            if empty_at_last_end || !on_word_boundaries(text, mat.start(), mat.end()) {
+            // A match edge inside one source character's lowercase expansion
+            // has no source offset.
+            let span = to_source(mat.start()).zip(to_source(mat.end()));
+            let Some((start_byte, end_byte)) =
+                span.filter(|&(s, e)| !empty_at_last_end && on_word_boundaries(text, s, e))
+            else {
                 input.set_start(mat.start() + 1);
                 continue;
-            }
+            };
             last_end = Some(mat.end());
             input.set_start(mat.end() + usize::from(mat.is_empty()));
             let pattern = &self.pattern_list[mat.pattern()];
@@ -111,14 +145,14 @@ impl FlashText {
                 .unwrap_or_else(|| pattern.clone());
 
             // Advance char counter from last match end → current match start.
-            if mat.start() >= last_byte {
-                last_char += text[last_byte..mat.start()].chars().count();
+            if start_byte >= last_byte {
+                last_char += text[last_byte..start_byte].chars().count();
             } else {
                 // Defensive: should not happen for `find_iter` (monotonic), but keep correctness.
-                last_char = text[..mat.start()].chars().count();
+                last_char = text[..start_byte].chars().count();
             }
             let start = last_char;
-            let len = text[mat.start()..mat.end()].chars().count();
+            let len = text[start_byte..end_byte].chars().count();
 
             out.push(KeywordMatch {
                 keyword: pattern.clone(),
@@ -128,7 +162,7 @@ impl FlashText {
             });
 
             // Update last boundary to end of match.
-            last_byte = mat.end();
+            last_byte = end_byte;
             last_char = start + len;
         }
     }
@@ -139,6 +173,28 @@ impl FlashText {
         self.find_into(text, &mut matches);
         matches
     }
+}
+
+/// Lowercase each character independently (`char::to_lowercase`), so text
+/// and keywords fold the same way regardless of context.
+fn lowercase(s: &str) -> String {
+    s.chars().flat_map(char::to_lowercase).collect()
+}
+
+/// Like [`lowercase`], also filling `source` so that `source[i]` is the byte
+/// offset in `text` of byte offset `i` in the result, or `None` where `i`
+/// falls inside one source character's expansion.
+fn lowercase_with_source(text: &str, source: &mut Vec<Option<usize>>) -> String {
+    let mut out = String::with_capacity(text.len());
+    source.clear();
+    for (i, c) in text.char_indices() {
+        source.resize(out.len(), None);
+        source.push(Some(i));
+        out.extend(c.to_lowercase());
+    }
+    source.resize(out.len(), None);
+    source.push(Some(text.len()));
+    out
 }
 
 fn is_word_char(c: char) -> bool {
@@ -252,6 +308,42 @@ mod tests {
             vec![(7, 11)]
         );
         assert_eq!(m[0].value, "FOOD");
+    }
+
+    #[test]
+    fn flashtext_case_insensitive_matches_non_ascii_case() {
+        let mut ft = FlashText::new();
+        ft.add_keyword("Müller", "m");
+        ft.add_keyword("ΣΟΦΊΑ", "sofia");
+        // Offsets count characters of the original text.
+        let m = ft.find("é MÜLLER, σοφία");
+        assert_eq!(
+            m.iter()
+                .map(|m| (m.start, m.end, m.value.as_str()))
+                .collect::<Vec<_>>(),
+            vec![(2, 8, "m"), (10, 15, "sofia")]
+        );
+        // 'İ' lowercases to two characters; offsets after it stay correct.
+        assert_eq!(
+            ft.find("İ müller")
+                .iter()
+                .map(|m| (m.start, m.end))
+                .collect::<Vec<_>>(),
+            vec![(2, 8)]
+        );
+        // Control: word boundaries still apply to non-ASCII text.
+        assert!(ft.find("MÜLLERS").is_empty());
+        assert!(ft.find("Mueller").is_empty());
+    }
+
+    #[test]
+    fn case_insensitive_match_must_cover_whole_source_characters() {
+        // 'İ' lowercases to "i\u{307}"; a keyword matching only part of that
+        // expansion has no source span.
+        let mut ft = FlashText::new();
+        ft.add_keyword("i", "i");
+        assert!(ft.find("İ").is_empty());
+        assert_eq!(ft.find("I").len(), 1);
     }
 
     #[test]
