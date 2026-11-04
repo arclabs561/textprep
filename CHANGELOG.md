@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Changed
+
+- Declare `rust-version = "1.85"`. The declared 1.75 did not hold: a fresh
+  resolve picks `unicode-segmentation` 1.13, which requires Rust 1.85.
+
 ### Added
 
 - `segment::sentence_byte_ranges` and `segment::word_byte_ranges`: UAX #29

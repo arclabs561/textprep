@@ -2,7 +2,7 @@
 name = "textprep"
 version = "0.2.1"
 edition = "2021"
-rust-version = "1.75"
+rust-version = "1.85"
 authors = ["Arc"]
 license = "MIT OR Apache-2.0"
 description = "Text normalization, tokenization, and keyword matching primitives"
