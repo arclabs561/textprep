@@ -9,9 +9,55 @@ Format: [Keep a Changelog](https://keepachangelog.com).
 
 - Declare `rust-version = "1.85"`. The declared 1.75 did not hold: a fresh
   resolve picks `unicode-segmentation` 1.13, which requires Rust 1.85.
+- Behaviour change: `stopwords::get` returns NLTK's list for each of 33
+  languages (from the `stop-words` crate, `nltk` feature only), where it
+  returned a set only for English. It also accepts ISO 639-3 codes and
+  English names (`"deu"`, `"german"`) and ignores a region subtag
+  (`"en-US"`).
+- Behaviour change: English stopwords are NLTK's current 198-word list.
+  `get("en")` and `is_english_stopword` used the 127-word list; the 71
+  added words are contraction forms and fragments ("ain", "aren",
+  "aren't", "couldn", "couldn't", "d", "didn", "didn't", "doesn",
+  "doesn't", "don't", "hadn", "hadn't", "hasn", "hasn't", "haven",
+  "haven't", "he'd", "he'll", "he's", "i'd", "i'll", "i'm", "i've", "isn",
+  "isn't", "it'd", "it'll", "it's", "ll", "m", "ma", "mightn", "mightn't",
+  "mustn", "mustn't", "needn", "needn't", "o", "re", "shan", "shan't",
+  "she'd", "she'll", "she's", "should've", "shouldn", "shouldn't",
+  "that'll", "they'd", "they'll", "they're", "they've", "ve", "wasn",
+  "wasn't", "we'd", "we'll", "we're", "we've", "weren", "weren't", "won",
+  "won't", "wouldn", "wouldn't", "y", "you'd", "you'll", "you're",
+  "you've"). No word was removed.
+- Behaviour change: `is_english_stopword` treats U+2018 and U+2019 as `'`,
+  so `don’t` is a stopword.
+
+### Deprecated
+
+- `stopwords::ENGLISH`, the 127-word list. Its contents are unchanged, but
+  textprep no longer uses it; use `stopwords::list("en")` or
+  `Language::english()`.
 
 ### Added
 
+- `language::Language`: a language code with its stopword set and, with
+  the new `stem` feature, its Snowball stemmer (rust-stemmers, 18
+  languages): `from_code`, `english`, `with_stopwords`,
+  `with_extra_stopwords`, `is_stopword` (lowercases and treats U+2018 and
+  U+2019 as `'`), `stem` and `has_stemmer`.
+- `language::LanguagePolicy` (`Fixed`, `Detect`, `DetectPerSentence {
+  fallback }`), the `language::Detector` trait (also implemented for
+  closures) and `language::sentence_languages_with`, which assigns a
+  language to each sentence from `segment::sentence_byte_ranges`. Text
+  with fewer than 10 letters (`MIN_DETECT_CHARS`) is never sent to the
+  detector.
+- `detect` feature: `WhatlangDetector` (whatlang 0.18), `language::detect`
+  and `language::sentence_languages`. On Tatoeba sentences in 17
+  languages lingua 1.8 was more accurate on short sentences (94% against
+  69% correct at 1 to 3 words), but it is not a dependency: it adds about
+  143 MB to a release binary and needs Rust 1.88. Plug it in through
+  `Detector`. `tools/lang-eval` (not packaged) holds the measurement.
+- `stopwords::LANGUAGES`, `stopwords::canonical_code`, `stopwords::list`
+  and `stopwords::fold_apostrophes`.
+- Example `sentence_languages`.
 - `segment::sentence_byte_ranges` and `segment::word_byte_ranges`: UAX #29
   boundaries adapted to prose, as byte ranges into the input. A single line
   break does not end a sentence, a period after a known English

@@ -1,0 +1,25 @@
+[package]
+name = "lang-eval"
+version = "0.0.0"
+edition = "2021"
+publish = false
+description = "Measures whatlang and lingua as sentence language detectors for textprep"
+
+# Not part of textprep's build or package; see src/main.rs. Run fetch.sh
+# first, then `cargo run --release`.
+[workspace]
+
+[dependencies]
+textprep = { path = "../..", features = ["detect"] }
+whatlang = "0.18"
+# The 29 lingua languages that have an NLTK stopword list.
+lingua = { version = "1.8", default-features = false, features = [
+    "albanian", "arabic", "azerbaijani", "basque", "belarusian", "bengali", "bokmal",
+    "catalan", "chinese", "danish", "dutch", "english", "finnish", "french", "german",
+    "greek", "hebrew", "hungarian", "indonesian", "italian", "kazakh", "portuguese",
+    "romanian", "russian", "slovene", "spanish", "swedish", "tamil", "turkish",
+] }
+
+[profile.release]
+debug = false
+strip = true
