@@ -6,7 +6,7 @@ Text normalization, tokenization, and keyword matching primitives
 
 ```toml
 [dependencies]
-textprep = "0.2.1"
+textprep = "0.3"
 ```
 
 ## Usage
