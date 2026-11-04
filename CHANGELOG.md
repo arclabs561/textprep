@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+
+- `stopwords::smart_english`: the SMART English stopword list (570 words,
+  from the RCV1 paper's appendix 11), for splitting untagged text into
+  candidate phrases. NLTK's lists stay the default everywhere else.
+
 ## [0.3.0] - 2026-11-04
 
 ### Changed
