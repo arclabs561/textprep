@@ -313,9 +313,54 @@ pub fn is_english_stopword(token: &str) -> bool {
     shared("en").contains(fold_apostrophes(token).as_ref())
 }
 
+/// The SMART English stopword list (570 words), lowercase.
+///
+/// SMART (Salton and Buckley's retrieval system at Cornell) lists general
+/// high-frequency words as well as function words ("following", "however",
+/// "provides", "various"), so it is larger than NLTK's list. That suits one
+/// job: splitting untagged text into candidate phrases for keyphrase
+/// extraction, where a stopword list stands in for a part-of-speech filter.
+/// Rose et al. (2010) used it for RAKE. For term weighting keep the smaller
+/// function-word list from [`get`]. The words come from the RCV1 paper's
+/// online appendix 11 (Lewis et al. 2004); see the header of
+/// `src/data/smart_en.txt` for provenance.
+///
+/// ```
+/// let smart = textprep::stopwords::smart_english();
+/// assert_eq!(smart.len(), 570);
+/// assert!(smart.contains("however"));
+/// ```
+pub fn smart_english() -> HashSet<String> {
+    static SMART: OnceLock<HashSet<String>> = OnceLock::new();
+    SMART
+        .get_or_init(|| {
+            include_str!("data/smart_en.txt")
+                .lines()
+                .map(str::trim)
+                .filter(|l| !l.is_empty() && !l.starts_with('#'))
+                .map(str::to_string)
+                .collect()
+        })
+        .clone()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn smart_english_is_the_570_word_list_and_covers_nltk_function_words() {
+        let smart = smart_english();
+        assert_eq!(smart.len(), 570);
+        assert!(smart.iter().all(|w| w == &w.to_lowercase()));
+        for w in ["the", "of", "and", "however", "following", "would"] {
+            assert!(smart.contains(w), "{w}");
+        }
+        // General words a candidate splitter should keep as content.
+        for w in ["information", "system", "computer", "web", "research"] {
+            assert!(!smart.contains(w), "{w}");
+        }
+    }
 
     #[test]
     #[allow(deprecated)]
