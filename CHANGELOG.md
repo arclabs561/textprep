@@ -5,6 +5,8 @@ Format: [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-04
+
 ### Added
 
 - `stopwords::smart_english`: the SMART English stopword list (570 words,
