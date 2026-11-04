@@ -12,6 +12,7 @@ documentation = "https://docs.rs/textprep"
 readme = "README.md"
 keywords = ["text-processing", "tokenization", "normalization", "aho-corasick"]
 categories = ["text-processing"]
+exclude = ["tools/"]
 
 [workspace]
 
@@ -21,12 +22,21 @@ unicode-segmentation = "1.10"
 aho-corasick = "1.1"
 caseless = { version = "0.2.2", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
+stop-words = { version = "0.10.1", default-features = false, features = ["nltk"] }
+rust-stemmers = { version = "1.2", optional = true }
+whatlang = { version = "0.18", optional = true }
 
 [features]
 default = []
 serde = ["dep:serde"]
 casefold = ["dep:caseless"]
 graphemes = []
+# Snowball stemmers (`Language::stem`).
+stem = ["dep:rust-stemmers"]
+# Built-in language detection with whatlang (`language::detect`,
+# `WhatlangDetector`, `sentence_languages`). Adds about 0.25 MB to a
+# release binary. Other detectors plug in through `language::Detector`.
+detect = ["dep:whatlang"]
 
 [dev-dependencies]
 proptest = "1.9"
@@ -37,3 +47,10 @@ gramdex = "0.1"
 [[bench]]
 name = "textprep_bench"
 harness = false
+
+[[example]]
+name = "sentence_languages"
+required-features = ["detect", "stem"]
+
+[package.metadata.docs.rs]
+features = ["casefold", "graphemes", "serde", "stem", "detect"]

@@ -10,6 +10,7 @@ captured from release runs.
 | Normalize token keys while preserving source offsets | `search_key_tokens` |
 | Fuzzy-match query strings against extracted tokens | `fuzzy_token_match` |
 | Tag dictionary entities in noisy web text | `gazetteer_tagging` |
+| Find each sentence's language, stopwords and stems | `sentence_languages` |
 
 ## Normalized keys and offsets
 
@@ -101,3 +102,25 @@ ok
 
 The `New York` entry wins over the overlapping `York` entry, while the
 standalone `York Fashion Week` mention still tags as `YORK`.
+
+## Languages
+
+### `sentence_languages`: which language is each sentence in?
+
+Assigns a language to each sentence of a German and English text with
+`LanguagePolicy::DetectPerSentence`, then drops stopwords and stems the
+remaining words in that sentence's language. "Ja." is too short to detect,
+so it takes the language of the whole text.
+
+```bash
+cargo run --release --example sentence_languages --features detect,stem
+```
+
+```text
+de (Sentence): Die Abgeordneten diskutierten mehrere Stunden über die Kosten.
+    abgeordnet diskutiert mehr stund kost
+en (Sentence): The committee didn’t publish its final report.
+    committe publish final report
+de (Document): Ja.
+    ja
+```

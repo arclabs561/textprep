@@ -41,6 +41,36 @@ matches:
   muller  key=mueller span=54..61 original="Mueller"
 ```
 
+## Languages
+
+`Language` bundles a language's stopwords (NLTK's lists, 33 languages) and,
+with the `stem` feature, its Snowball stemmer (18 languages). Stopword
+lookup lowercases the token and treats `’` as `'`:
+
+```rust
+use textprep::language::Language;
+
+let de = Language::from_code("de").unwrap().with_extra_stopwords(["vgl"]);
+assert!(de.is_stopword("Und"));
+assert!(de.is_stopword("vgl"));
+assert!(Language::english().is_stopword("didn\u{2019}t"));
+```
+
+With the `detect` feature, `LanguagePolicy::DetectPerSentence` assigns each
+sentence its own language. A sentence with fewer than 10 letters takes the
+language of the whole text. `cargo run --release --example
+sentence_languages --features detect,stem` prints each sentence's language,
+where it came from, and the stems of its non-stopwords:
+
+```text
+de (Sentence): Die Abgeordneten diskutierten mehrere Stunden über die Kosten.
+    abgeordnet diskutiert mehr stund kost
+en (Sentence): The committee didn’t publish its final report.
+    committe publish final report
+de (Document): Ja.
+    ja
+```
+
 ## Choices and limits
 
 - Scrubbing is lossy: it can change case, normalization form, whitespace, and
@@ -50,7 +80,14 @@ matches:
 - `ScrubConfig::search_key()` preserves zero-width characters. Use
   `search_key_strict_invisibles()` only when removing joiners and other common
   invisible characters is appropriate for the input.
-- The built-in stopword list is English-only.
+- Stopword lists are NLTK's function-word lists. Lists for larger
+  vocabularies (stopwords-iso, SMART) are not included.
+- Language detection is per text or per sentence, not per phrase. On short
+  sentences the built-in whatlang detector (`detect`) is often wrong: 69%
+  correct at 1 to 3 words and 81% at 4 to 5 in the `tools/lang-eval`
+  measurement, against 94% and 97% for lingua. lingua is not a dependency
+  (its models add about 143 MB); plug it or any other detector in through
+  `language::Detector` and `sentence_languages_with`.
 
 Optional features:
 
@@ -58,6 +95,8 @@ Optional features:
 - `graphemes`: typed conversion between byte,
   scalar, and grapheme boundaries.
 - `serde`: serialization for tokens, keyword matches, and scrub configuration.
+- `stem`: Snowball stemmers (rust-stemmers).
+- `detect`: built-in language detection with whatlang (about 0.25 MB).
 
 See [the examples](examples/README.md) for keyword matching, fuzzy matching,
 normalized token keys, and source-offset handling.
