@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+
+- `segment::sentence_byte_ranges` and `segment::word_byte_ranges`: UAX #29
+  boundaries adapted to prose, as byte ranges into the input. A single line
+  break does not end a sentence, a period after a known English
+  abbreviation does not either unless a sentence opener follows, and
+  hyphenated compounds stay one word. The abbreviation and opener lists
+  are vendored from sentencex 0.1.33 (MIT).
+
 ## [0.2.1] - 2026-11-03
 
 ### Fixed

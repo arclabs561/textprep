@@ -4,7 +4,7 @@
 //! Text preprocessing primitives for the representational stack.
 //!
 //! Provides Unicode normalization, case folding, diacritics stripping,
-//! tokenization, and fast keyword matching.
+//! tokenization, sentence segmentation, and fast keyword matching.
 
 // Compile and run the README's Rust examples as doctests.
 #[cfg(doctest)]
@@ -17,6 +17,7 @@ pub mod fold;
 pub mod graphemes;
 pub mod html;
 pub mod ngram;
+pub mod segment;
 pub mod similarity;
 pub mod spans;
 pub mod stopwords;
