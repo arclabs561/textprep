@@ -5,6 +5,8 @@ Format: [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-04
+
 ### Changed
 
 - Declare `rust-version = "1.85"`. The declared 1.75 did not hold: a fresh
