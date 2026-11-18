@@ -28,42 +28,24 @@
 /// assert_eq!(decode_entities("&#x2019;"), "\u{2019}");
 /// ```
 pub fn decode_entities(text: &str) -> String {
-    // Fast path: no ampersand means no entities.
-    if !text.contains('&') {
-        return text.to_string();
-    }
+    let Some((prefix, rest)) = text.split_once('&') else {
+        return text.to_owned();
+    };
 
     let mut out = String::with_capacity(text.len());
-    let mut rest = text;
-
-    while let Some(amp_pos) = rest.find('&') {
-        // Copy everything before the '&'.
-        out.push_str(&rest[..amp_pos]);
-        rest = &rest[amp_pos..]; // rest now starts with '&'
-
-        // Look for the closing ';' within a reasonable window (max 12 chars for entity).
-        // Search bytes, not a `str` slice: 14 bytes can end inside a multi-byte
-        // character, and slicing there panicked. `;` is ASCII, so its byte
-        // index is always a char boundary.
-        let search_end = rest.len().min(14); // &xxxxxxxxxxxx;
-        let window = &rest.as_bytes()[..search_end];
-        if let Some(semi_offset) = window.iter().position(|&b| b == b';') {
-            let entity = &rest[1..semi_offset]; // between '&' and ';'
-
+    out.push_str(prefix);
+    // An ampersand starts a new candidate even if the previous one was unclosed.
+    for chunk in rest.split('&') {
+        if let Some((entity, tail)) = chunk.split_once(';') {
             if let Some(decoded) = decode_one(entity) {
                 out.push(decoded);
-                rest = &rest[semi_offset + 1..];
+                out.push_str(tail);
                 continue;
             }
         }
-
-        // Not a valid entity -- emit the '&' literally and advance.
         out.push('&');
-        rest = &rest[1..];
+        out.push_str(chunk);
     }
-
-    // Remaining text after the last entity.
-    out.push_str(rest);
     out
 }
 
@@ -171,6 +153,17 @@ mod tests {
         assert_eq!(decode_entities("&#x2019;"), "\u{2019}");
         assert_eq!(decode_entities("&#x41;"), "A");
         assert_eq!(decode_entities("&#X41;"), "A"); // uppercase X
+    }
+
+    #[test]
+    fn long_numeric_references() {
+        assert_eq!(decode_entities("&#00000000000065;"), "A");
+        assert_eq!(decode_entities("&#x000000000000E9;"), "é");
+        assert_eq!(decode_entities("&#99999999999999;"), "�");
+        assert_eq!(
+            decode_entities("&#00000000000065&amp;"),
+            "&#00000000000065&"
+        );
     }
 
     #[test]
