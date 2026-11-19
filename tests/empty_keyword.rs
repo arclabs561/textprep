@@ -39,3 +39,17 @@ fn empty_keyword_does_not_disrupt_real_matches_or_reused_output() {
         expected
     );
 }
+
+#[test]
+fn incomplete_keyword_keeps_empty_match_at_its_start() {
+    let mut matcher = FlashText::new();
+    matcher.add_keyword("", "empty");
+    matcher.add_keyword("界🦀", "pair");
+
+    let matches = matcher.find("界!界🦀");
+    let spans: Vec<_> = matches
+        .iter()
+        .map(|m| (m.value.as_str(), m.start, m.end))
+        .collect();
+    assert_eq!(spans, [("empty", 0, 0), ("empty", 1, 1), ("pair", 2, 4)]);
+}

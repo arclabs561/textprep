@@ -1,6 +1,6 @@
 //! Fast keyword matching using Aho-Corasick.
 
-use aho_corasick::{AhoCorasick, Input, MatchKind};
+use aho_corasick::{AhoCorasick, Anchored, Input, MatchKind, StartKind};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -79,6 +79,13 @@ impl FlashText {
             };
             let ac = AhoCorasick::builder()
                 .match_kind(MatchKind::LeftmostLongest)
+                // With an empty keyword, every position is a possible match.
+                // An unanchored search can skip it while trying a longer prefix.
+                .start_kind(if self.keywords.contains_key("") {
+                    StartKind::Anchored
+                } else {
+                    StartKind::Unanchored
+                })
                 .ascii_case_insensitive(self.case_insensitive)
                 .build(&patterns)
                 .expect("failed to build Aho-Corasick matcher");
@@ -122,6 +129,9 @@ impl FlashText {
         // rejected at a word boundary does not consume its span: a whole-word
         // keyword can start inside it ("food" in "bobcat food").
         let mut input = Input::new(haystack);
+        if matcher.start_kind() == StartKind::Anchored {
+            input.set_anchored(Anchored::Yes);
+        }
         let mut last_end = None;
         while let Some(mat) = matcher.find(input.clone()) {
             // As `find_iter` does, skip an empty match at the previous match end.
