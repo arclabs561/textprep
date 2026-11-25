@@ -12,6 +12,7 @@
 #[doc = include_str!("../README.md")]
 pub struct ReadmeDoctests;
 
+pub mod clean;
 pub mod flash;
 pub mod fold;
 #[cfg(feature = "graphemes")]

@@ -58,7 +58,7 @@ jobs:
         id: package
         run: |
           version=$(cargo metadata --no-deps --format-version 1 | jq -er '.packages[] | select(.name == "textprep") | .version')
-          cargo publish --dry-run --registry crates-io -p textprep
+          cargo publish --workspace --all-features --dry-run --registry crates-io
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Verified textprep $version at \`$GITHUB_SHA\`." >> "$GITHUB_STEP_SUMMARY"
 
@@ -125,4 +125,14 @@ jobs:
       - name: Publish the verified commit
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
-        run: cargo publish --registry crates-io -p textprep
+        run: |
+          map_version=$(cargo metadata --no-deps --format-version 1 | jq -er '.packages[] | select(.name == "textprep-source-map") | .version')
+          status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --user-agent "textprep release workflow ($GITHUB_REPOSITORY)" \
+            "https://crates.io/api/v1/crates/textprep-source-map/$map_version")
+          case "$status" in
+            404) cargo publish --registry crates-io -p textprep-source-map ;;
+            200) echo "textprep-source-map $map_version is available" ;;
+            *) echo "::error::crates.io returned HTTP $status"; exit 1 ;;
+          esac
+          cargo publish --registry crates-io -p textprep
