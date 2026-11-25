@@ -564,7 +564,10 @@ mod tests {
         let left = third.compose(&composed).unwrap();
         let right = third.compose(&nfc).unwrap().compose(&strip).unwrap();
         for map in [left, right] {
-            assert_eq!(map.project_chars("é", 0..1).unwrap(), [expected.clone()]);
+            assert_eq!(
+                map.project_chars("é", 0..1).unwrap().as_slice(),
+                std::slice::from_ref(&expected)
+            );
             assert_eq!(map.runs[0].source_bytes, None);
             assert!(map.project_bytes("é", 0..1).is_err());
             map.verify(html.as_bytes(), "é").unwrap();
@@ -628,7 +631,9 @@ mod tests {
         );
         assert!(map.project_chars(source, 3..3).unwrap().is_empty());
         assert!(map.project_chars(source, 4..4).is_err());
-        assert!(map.project_chars(source, 2..1).is_err());
+        assert!(map
+            .project_chars(source, Range { start: 2, end: 1 })
+            .is_err());
         assert!(map.project_bytes(source, 1..4).is_err());
         assert!(SourceMap::new(
             "ab",
