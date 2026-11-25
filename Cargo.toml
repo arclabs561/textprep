@@ -15,10 +15,9 @@ categories = ["text-processing"]
 exclude = ["tools/"]
 
 [workspace]
-members = ["crates/source-map"]
 
 [dependencies]
-textprep-source-map = { path = "crates/source-map", version = "0.1.0", optional = true }
+hmac-sha256 = { version = "1.1.14", default-features = false, optional = true }
 unicode-normalization = "0.1"
 unicode-segmentation = "1.10"
 aho-corasick = "1.1"
@@ -30,8 +29,8 @@ whatlang = { version = "0.18", optional = true }
 
 [features]
 default = []
-serde = ["dep:serde", "textprep-source-map?/serde"]
-source-map = ["dep:textprep-source-map"]
+serde = ["dep:serde"]
+source-map = ["dep:hmac-sha256"]
 casefold = ["dep:caseless"]
 graphemes = []
 # Snowball stemmers (`Language::stem`).

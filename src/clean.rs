@@ -4,7 +4,7 @@ use std::ops::Range;
 #[cfg(feature = "source-map")]
 mod mapped;
 #[cfg(feature = "source-map")]
-pub use textprep_source_map::{SourceKind, SourceMap, SourceRun};
+use crate::spanmap::SourceMap;
 
 /// Cleaning operations, in the order they are applied.
 /// Both are enabled by default. Disable Unicode normalization when joiners are

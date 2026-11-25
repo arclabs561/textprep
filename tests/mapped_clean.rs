@@ -1,6 +1,7 @@
 #![cfg(feature = "source-map")]
 use std::ops::Range;
-use textprep::clean::{CleanOptions, SourceKind};
+use textprep::clean::CleanOptions;
+use textprep::spanmap::SourceKind;
 
 fn assert_scalar_source(
     original: &str,

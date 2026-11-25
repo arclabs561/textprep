@@ -1,4 +1,5 @@
-use super::{clean_whitespace, CleanOptions, SourceKind, SourceMap, SourceRun};
+use super::{clean_whitespace, CleanOptions};
+use crate::spanmap::{SourceKind, SourceMap, SourceRun};
 use std::ops::Range;
 use unicode_normalization::char::{canonical_combining_class, decompose_canonical};
 

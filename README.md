@@ -49,7 +49,8 @@ characters, normalizes to NFC, and trims and collapses document whitespace.
 
 ```rust
 # #[cfg(feature = "source-map")] {
-use textprep::clean::{CleanOptions, SourceKind};
+use textprep::clean::CleanOptions;
+use textprep::spanmap::SourceKind;
 
 let source = "  e\u{200b}\u{301}  ";
 let (cleaned, map) = CleanOptions::default().prepare_mapped(source)?;

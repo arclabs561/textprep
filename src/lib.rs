@@ -22,6 +22,8 @@ pub mod language;
 pub mod ngram;
 pub mod segment;
 pub mod similarity;
+#[cfg(feature = "source-map")]
+pub mod spanmap;
 pub mod spans;
 pub mod stopwords;
 pub mod subword;
