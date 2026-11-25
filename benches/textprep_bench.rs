@@ -212,6 +212,20 @@ fn bench_scrub(c: &mut Criterion) {
     group.finish();
 }
 
+#[cfg(feature = "source-map")]
+fn bench_mapped_clean(c: &mut Criterion) {
+    let mut group = c.benchmark_group("clean::sparse_document");
+    let options = textprep::clean::CleanOptions::default();
+    let mut input = "abcd ".repeat((2 * 1024 * 1024) / 5);
+    input.push_str("e\u{301}");
+    group.throughput(criterion::Throughput::Bytes(input.len() as u64));
+    group.bench_function("plain", |b| b.iter(|| options.prepare(black_box(&input))));
+    group.bench_function("mapped", |b| {
+        b.iter(|| options.prepare_mapped(black_box(&input)).unwrap())
+    });
+    group.finish();
+}
+
 criterion_group!(
     benches,
     bench_collapse_whitespace,
@@ -221,4 +235,9 @@ criterion_group!(
     bench_flashtext,
     bench_scrub
 );
+#[cfg(feature = "source-map")]
+criterion_group!(mapped_benches, bench_mapped_clean);
+#[cfg(feature = "source-map")]
+criterion_main!(benches, mapped_benches);
+#[cfg(not(feature = "source-map"))]
 criterion_main!(benches);

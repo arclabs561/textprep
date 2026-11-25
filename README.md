@@ -41,6 +41,27 @@ matches:
   muller  key=mueller span=54..61 original="Mueller"
 ```
 
+### Mapping cleaned documents to the original bytes
+
+Enable the `source-map` feature to project ranges in cleaned text back to their
+UTF-8 source bytes. `CleanOptions` optionally removes common zero-width
+characters, normalizes to NFC, and trims and collapses document whitespace.
+
+```rust
+# #[cfg(feature = "source-map")] {
+use textprep::clean::CleanOptions;
+use textprep::spanmap::SourceKind;
+
+let source = "  e\u{200b}\u{301}  ";
+let (cleaned, map) = CleanOptions::default().prepare_mapped(source)?;
+assert_eq!(cleaned, "é");
+let runs = map.project_bytes(&cleaned, 0..2)?;
+assert_eq!(runs[0].kind, SourceKind::Transformed);
+assert_eq!(runs[0].source_ranges, vec![2..3, 6..8]);
+# }
+# Ok::<(), String>(())
+```
+
 ## Languages
 
 `Language` bundles a language's stopwords (NLTK's lists, 33 languages) and,

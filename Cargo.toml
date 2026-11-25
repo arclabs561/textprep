@@ -1,6 +1,6 @@
 [package]
 name = "textprep"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 rust-version = "1.85"
 authors = ["Arc"]
@@ -17,6 +17,7 @@ exclude = ["tools/"]
 [workspace]
 
 [dependencies]
+hmac-sha256 = { version = "1.1.14", default-features = false, optional = true }
 unicode-normalization = "0.1"
 unicode-segmentation = "1.10"
 aho-corasick = "1.1"
@@ -29,6 +30,7 @@ whatlang = { version = "0.18", optional = true }
 [features]
 default = []
 serde = ["dep:serde"]
+source-map = ["dep:hmac-sha256"]
 casefold = ["dep:caseless"]
 graphemes = []
 # Snowball stemmers (`Language::stem`).
@@ -53,4 +55,4 @@ name = "sentence_languages"
 required-features = ["detect", "stem"]
 
 [package.metadata.docs.rs]
-features = ["casefold", "graphemes", "serde", "stem", "detect"]
+features = ["casefold", "graphemes", "serde", "stem", "detect", "source-map"]

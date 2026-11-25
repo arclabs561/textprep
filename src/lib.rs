@@ -12,6 +12,7 @@
 #[doc = include_str!("../README.md")]
 pub struct ReadmeDoctests;
 
+pub mod clean;
 pub mod flash;
 pub mod fold;
 #[cfg(feature = "graphemes")]
@@ -21,6 +22,8 @@ pub mod language;
 pub mod ngram;
 pub mod segment;
 pub mod similarity;
+#[cfg(feature = "source-map")]
+pub mod spanmap;
 pub mod spans;
 pub mod stopwords;
 pub mod subword;

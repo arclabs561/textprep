@@ -5,6 +5,16 @@ Format: [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-11-25
+
+### Added
+
+- `clean::CleanOptions` prepares document text with independent NFC and
+  whitespace options. Its `source-map` feature preserves UTF-8 byte provenance
+  through deletion, composition, reordering, and whitespace collapse.
+- `spanmap::SourceMap` projects UTF-8 byte ranges through successive text
+  transformations and retains disjoint original fragments.
+
 ## [0.3.1] - 2026-11-04
 
 ### Added
