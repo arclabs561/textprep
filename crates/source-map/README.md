@@ -25,7 +25,9 @@ assert_eq!(fragment.source_bytes, Some(0..5));
 Compose a downstream map with its upstream map using
 `downstream.compose(&upstream)`. Composition checks the length and SHA-256 digest
 of the intermediate edition. A partial query inside an indivisible transformation
-returns approximate evidence. Use `SourceMap::unmapped` when the output has no
+returns approximate evidence. When composing several stages, the grouping can
+affect precision. An early split of an indivisible run records uncertainty in
+each resulting fragment, even if a later transform reunites them. Use `SourceMap::unmapped` when the output has no
 recoverable coordinates.
 
 Enable the optional `serde` feature for interchange. After deserializing a map,

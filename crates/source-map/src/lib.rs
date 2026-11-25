@@ -727,4 +727,38 @@ mod tests {
         assert_eq!(map, SourceMap::identity("abc"));
         assert_eq!(serde_json::to_value(&map).unwrap(), json);
     }
+    #[test]
+    fn composing_reordered_partial_runs_retains_the_origin_and_available_precision() {
+        let expand = SourceMap::new(
+            "x",
+            "AB",
+            vec![SourceRun::new(0..2, Some(0..1), SourceKind::Transformed)],
+        )
+        .unwrap();
+        let reorder = SourceMap::new(
+            "AB",
+            "BA",
+            vec![
+                SourceRun::new(0..1, Some(1..2), SourceKind::Direct),
+                SourceRun::new(1..2, Some(0..1), SourceKind::Direct),
+            ],
+        )
+        .unwrap();
+        let fold = SourceMap::new(
+            "BA",
+            "z",
+            vec![SourceRun::new(0..1, Some(0..2), SourceKind::Transformed)],
+        )
+        .unwrap();
+        let clipped = fold.compose(&reorder.compose(&expand).unwrap()).unwrap();
+        let reunited = fold.compose(&reorder).unwrap().compose(&expand).unwrap();
+        assert_eq!(
+            clipped.runs,
+            [SourceRun::new(0..1, Some(0..1), SourceKind::Approximate)]
+        );
+        assert_eq!(
+            reunited.runs,
+            [SourceRun::new(0..1, Some(0..1), SourceKind::Transformed)]
+        );
+    }
 }
